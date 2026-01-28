@@ -4,7 +4,7 @@ Combine flood and waste metrics into quadkey polygons.
 
 This script:
 1. Loads quadkey polygons from step 3 output (3_displacement_scaled_to_worldpop.gpkg)
-2. Computes 95th percentile flood values per quadkey using zonal statistics
+2. Computes 95th percentile, mean, and max flood values per quadkey using zonal statistics
 3. Aggregates waste point data and SVI image points to quadkey polygons
 4. Computes waste metrics (count, per area, per population, per SVI)
    - All "per" metrics are scaled by 1000 for readability (units: per 1000)
@@ -13,6 +13,11 @@ This script:
 Output:
 - GeoPackage with quadkey polygons, flood metrics, and waste metrics
 - Saved to: Data/4/4_flood_waste_metrics_quadkey.gpkg
+
+Flood metric units:
+- 4_flood_p95: 95th percentile flood value per quadkey
+- 4_flood_mean: Mean flood value per quadkey (original/average flood value)
+- 4_flood_max: Maximum flood value per quadkey
 
 Waste metric units:
 - 4_waste_count: raw count of waste points
@@ -111,14 +116,14 @@ else:
     print(f"\n✅ Quadkey polygons already in flood raster CRS")
 
 # ---------- Compute zonal statistics for flood ----------
-print(f"\nComputing {PERCENTILE}th percentile flood values per quadkey...")
+print(f"\nComputing {PERCENTILE}th percentile, mean, and max flood values per quadkey...")
 print(f"  This may take a few minutes for large datasets...")
 
-# Compute zonal statistics
+# Compute zonal statistics (percentile, mean, and max)
 zs = zonal_stats(
     vectors=quadkey_gdf_reproj.geometry,
     raster=str(FLOOD_RASTER),
-    stats=[f'percentile_{PERCENTILE}'],
+    stats=[f'percentile_{PERCENTILE}', 'mean', 'max'],
     nodata=flood_nodata,
     all_touched=True,
     geojson_out=False
@@ -130,22 +135,58 @@ flood_p95_values = np.array([
     for v in zs
 ])
 
+# Extract mean values (original flood value)
+flood_mean_values = np.array([
+    v['mean'] if v['mean'] is not None else np.nan
+    for v in zs
+])
+
+# Extract max values (maximum flood value)
+flood_max_values = np.array([
+    v['max'] if v['max'] is not None else np.nan
+    for v in zs
+])
+
 # Add to quadkey_gdf (in original CRS)
 quadkey_gdf[f'4_flood_p{PERCENTILE}'] = flood_p95_values
+quadkey_gdf['4_flood_mean'] = flood_mean_values
+quadkey_gdf['4_flood_max'] = flood_max_values
 
-print(f"  ✅ Computed flood percentiles for {len(quadkey_gdf):,} quadkeys")
+print(f"  ✅ Computed flood percentiles, mean, and max values for {len(quadkey_gdf):,} quadkeys")
 
 # ---------- Summary statistics for flood ----------
-valid_flood = quadkey_gdf[quadkey_gdf[f'4_flood_p{PERCENTILE}'].notna()]
+valid_flood_p95 = quadkey_gdf[quadkey_gdf[f'4_flood_p{PERCENTILE}'].notna()]
+valid_flood_mean = quadkey_gdf[quadkey_gdf['4_flood_mean'].notna()]
 print(f"\nFlood {PERCENTILE}th Percentile:")
-print(f"  Quadkeys with valid flood data: {len(valid_flood):,}")
+print(f"  Quadkeys with valid flood data: {len(valid_flood_p95):,}")
 print(f"  Quadkeys with no flood data: {(quadkey_gdf[f'4_flood_p{PERCENTILE}'].isna()).sum():,}")
 
-if len(valid_flood) > 0:
-    print(f"  Min: {valid_flood[f'4_flood_p{PERCENTILE}'].min():.4f}")
-    print(f"  Max: {valid_flood[f'4_flood_p{PERCENTILE}'].max():.4f}")
-    print(f"  Mean: {valid_flood[f'4_flood_p{PERCENTILE}'].mean():.4f}")
-    print(f"  Median: {valid_flood[f'4_flood_p{PERCENTILE}'].median():.4f}")
+if len(valid_flood_p95) > 0:
+    print(f"  Min: {valid_flood_p95[f'4_flood_p{PERCENTILE}'].min():.4f}")
+    print(f"  Max: {valid_flood_p95[f'4_flood_p{PERCENTILE}'].max():.4f}")
+    print(f"  Mean: {valid_flood_p95[f'4_flood_p{PERCENTILE}'].mean():.4f}")
+    print(f"  Median: {valid_flood_p95[f'4_flood_p{PERCENTILE}'].median():.4f}")
+
+print(f"\nFlood Mean (Original Value):")
+print(f"  Quadkeys with valid flood data: {len(valid_flood_mean):,}")
+print(f"  Quadkeys with no flood data: {(quadkey_gdf['4_flood_mean'].isna()).sum():,}")
+
+if len(valid_flood_mean) > 0:
+    print(f"  Min: {valid_flood_mean['4_flood_mean'].min():.4f}")
+    print(f"  Max: {valid_flood_mean['4_flood_mean'].max():.4f}")
+    print(f"  Mean: {valid_flood_mean['4_flood_mean'].mean():.4f}")
+    print(f"  Median: {valid_flood_mean['4_flood_mean'].median():.4f}")
+
+valid_flood_max = quadkey_gdf[quadkey_gdf['4_flood_max'].notna()]
+print(f"\nFlood Max (Maximum Value):")
+print(f"  Quadkeys with valid flood data: {len(valid_flood_max):,}")
+print(f"  Quadkeys with no flood data: {(quadkey_gdf['4_flood_max'].isna()).sum():,}")
+
+if len(valid_flood_max) > 0:
+    print(f"  Min: {valid_flood_max['4_flood_max'].min():.4f}")
+    print(f"  Max: {valid_flood_max['4_flood_max'].max():.4f}")
+    print(f"  Mean: {valid_flood_max['4_flood_max'].mean():.4f}")
+    print(f"  Median: {valid_flood_max['4_flood_max'].median():.4f}")
 
 # ============================================================================
 # PART 2: WASTE METRICS
@@ -329,10 +370,20 @@ print("Summary Statistics")
 print("="*60)
 
 # Flood summary
-valid_flood = quadkey_gdf[quadkey_gdf[f'4_flood_p{PERCENTILE}'].notna()]
+valid_flood_p95 = quadkey_gdf[quadkey_gdf[f'4_flood_p{PERCENTILE}'].notna()]
+valid_flood_mean = quadkey_gdf[quadkey_gdf['4_flood_mean'].notna()]
+valid_flood_max = quadkey_gdf[quadkey_gdf['4_flood_max'].notna()]
 print(f"\nFlood {PERCENTILE}th Percentile:")
-print(f"  Quadkeys with valid flood data: {len(valid_flood):,}")
+print(f"  Quadkeys with valid flood data: {len(valid_flood_p95):,}")
 print(f"  Quadkeys with no flood data: {(quadkey_gdf[f'4_flood_p{PERCENTILE}'].isna()).sum():,}")
+
+print(f"\nFlood Mean (Original Value):")
+print(f"  Quadkeys with valid flood data: {len(valid_flood_mean):,}")
+print(f"  Quadkeys with no flood data: {(quadkey_gdf['4_flood_mean'].isna()).sum():,}")
+
+print(f"\nFlood Max (Maximum Value):")
+print(f"  Quadkeys with valid flood data: {len(valid_flood_max):,}")
+print(f"  Quadkeys with no flood data: {(quadkey_gdf['4_flood_max'].isna()).sum():,}")
 
 # Waste summary
 valid_waste = quadkey_gdf[quadkey_gdf['4_waste_count_final'] != NODATA_VALUE]
@@ -367,6 +418,8 @@ print("Done!")
 print("="*60)
 print(f"\nOutput file: {OUT_GPKG}")
 print(f"  Total quadkeys: {len(quadkey_gdf):,}")
-print(f"  Quadkeys with flood data: {len(valid_flood):,}")
+print(f"  Quadkeys with flood p95 data: {len(valid_flood_p95):,}")
+print(f"  Quadkeys with flood mean data: {len(valid_flood_mean):,}")
+print(f"  Quadkeys with flood max data: {len(valid_flood_max):,}")
 print(f"  Quadkeys with waste: {(quadkey_gdf['4_waste_count'] > 0).sum():,}")
 print(f"  Quadkeys with SVI data: {quadkeys_with_svi:,}")

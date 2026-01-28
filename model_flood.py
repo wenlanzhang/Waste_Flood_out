@@ -16,7 +16,7 @@ COLUMN NAMING CONVENTIONS (updated):
   - Script 2 (2y_): 2_outflow_max, 2_displaced_excess_max
   - Script 3 (3scale_): 3_worldpop, 3_estimated_outflow_pop_from_2_outflow_max, 
                        3_estimated_outflow_pop_from_1_outflow_accumulated_hour0, etc.
-  - Script 4 (4flood_): 4_flood_p95, 4_waste_count, 4_waste_per_quadkey_area, 
+  - Script 4 (4flood_): 4_flood_p95, 4_flood_mean, 4_flood_max, 4_waste_count, 4_waste_per_quadkey_area, 
                         4_waste_per_population, 4_waste_per_svi_count
 
 Requirements:
@@ -67,7 +67,7 @@ N_PERM = 999                # permutations for Moran's I
 DISP_SUBS = ['1_outflow', '2_outflow', '3_estimated_outflow', '1_outflow_accumulated', '1_outflow_max', 
              '2_displaced_excess', '3_estimated_excess', 'displace', 'displacement', 'outflow', 
              'excess_displacement', 'estimated_outflow', 'estimated_excess']
-FLOOD_SUBS = ['4_flood', '4_flood_p', '4_flood_p95', 'flood', 'flood_p', 'flood_p95', 'flood_exposure', 'flood_risk']
+FLOOD_SUBS = ['4_flood', '4_flood_p', '4_flood_p95', '4_flood_mean', '4_flood_max', 'flood', 'flood_p', 'flood_p95', 'flood_mean', 'flood_max', 'flood_exposure', 'flood_risk']
 WASTE_SUBS = ['4_waste', '4_waste_count', '4_waste_per', '4_waste_per_quadkey', '4_waste_per_population', 
               '4_waste_per_svi', 'waste', 'waste_count', 'waste_per', 'waste_per_quadkey', 
               'waste_per_population', 'waste_per_svi']
