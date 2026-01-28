@@ -1,0 +1,41 @@
+Spatial Lag Model (SLM) Summary
+================================================================================
+Dependent variable: 1_outflow_accumulated_hour0
+Flood variable:     4_flood_p95
+Waste variable:     4_waste_per_quadkey_area
+Population variable: 3_fb_baseline_safe
+================================================================================
+
+REGRESSION RESULTS
+------------------
+
+SUMMARY OF OUTPUT: MAXIMUM LIKELIHOOD SPATIAL LAG (METHOD = FULL)
+-----------------------------------------------------------------
+Data set            :     unknown
+Weights matrix      :           w
+Dependent Variable  :1_outflow_accumulated_hour0                Number of Observations:         218
+Mean dependent var  :    184.5753                Number of Variables   :           5
+S.D. dependent var  :    613.1985                Degrees of Freedom    :         213
+Pseudo R-squared    :      0.8510
+Spatial Pseudo R-squared:  0.8481
+Log likelihood      :  -1500.6786
+Sigma-square ML     :  55757.0351                Akaike info criterion :    3011.357
+S.E of regression   :    236.1293                Schwarz criterion     :    3028.280
+
+------------------------------------------------------------------------------------
+            Variable     Coefficient       Std.Error     z-Statistic     Probability
+------------------------------------------------------------------------------------
+            CONSTANT      -158.11743        24.27799        -6.51279         0.00000
+         4_flood_p95        22.16034        15.52005         1.42785         0.15333
+4_waste_per_quadkey_area    -47971.22108      3483.35984       -13.77154         0.00000
+  3_fb_baseline_safe         0.40959         0.02320        17.65606         0.00000
+W_1_outflow_accumulated_hour0         0.08048         0.06893         1.16745         0.24303
+------------------------------------------------------------------------------------
+
+SPATIAL LAG MODEL IMPACTS
+Impacts computed using the 'simple' method.
+            Variable         Direct        Indirect          Total
+         4_flood_p95        22.1603          1.9395         24.0998
+4_waste_per_quadkey_area    -47971.2211      -4198.4560     -52169.6771
+  3_fb_baseline_safe         0.4096          0.0358          0.4454
+================================ END OF REPORT =====================================

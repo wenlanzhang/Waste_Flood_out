@@ -1,0 +1,37 @@
+OLS Model Summary
+================================================================================
+Dependent variable: 1_outflow_accumulated_hour0
+Flood variable:     4_flood_p95
+Waste variable:     4_waste_per_quadkey_area
+Population variable: 3_fb_baseline_safe
+================================================================================
+
+                                 OLS Regression Results                                
+=======================================================================================
+Dep. Variable:     1_outflow_accumulated_hour0   R-squared:                       0.850
+Model:                                     OLS   Adj. R-squared:                  0.848
+Method:                          Least Squares   F-statistic:                     14.01
+Date:                         Wed, 28 Jan 2026   Prob (F-statistic):           2.24e-08
+Time:                                 14:21:41   Log-Likelihood:                -1501.2
+No. Observations:                          218   AIC:                             3010.
+Df Residuals:                              214   BIC:                             3024.
+Df Model:                                    3                                         
+Covariance Type:                           HC3                                         
+============================================================================================
+                               coef    std err          z      P>|z|      [0.025      0.975]
+--------------------------------------------------------------------------------------------
+const                     -163.0318     48.038     -3.394      0.001    -257.185     -68.879
+4_flood_p95                 23.0287     11.676      1.972      0.049       0.145      45.913
+4_waste_per_quadkey_area -4.992e+04   1.34e+04     -3.739      0.000   -7.61e+04   -2.38e+04
+3_fb_baseline_safe           0.4323      0.084      5.141      0.000       0.268       0.597
+==============================================================================
+Omnibus:                      108.742   Durbin-Watson:                   1.847
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):             5077.873
+Skew:                           1.109   Prob(JB):                         0.00
+Kurtosis:                      26.540   Cond. No.                     3.99e+05
+==============================================================================
+
+Notes:
+[1] Standard Errors are heteroscedasticity robust (HC3)
+[2] The condition number is large, 3.99e+05. This might indicate that there are
+strong multicollinearity or other numerical problems.
