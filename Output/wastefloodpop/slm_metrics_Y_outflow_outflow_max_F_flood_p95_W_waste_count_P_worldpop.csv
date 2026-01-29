@@ -1,0 +1,11 @@
+metric,value
+pseudo_r2,0.667664830079727
+4_flood_p95_Direct,-32.0369
+4_flood_p95_Indirect,-10.7668
+4_flood_p95_Total,-42.8036
+4_waste_count_Direct,55.7649
+4_waste_count_Indirect,18.7411
+4_waste_count_Total,74.506
+3_worldpop_Direct,0.0993
+3_worldpop_Indirect,0.0334
+3_worldpop_Total,0.1327

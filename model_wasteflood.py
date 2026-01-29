@@ -74,13 +74,13 @@ NODATA = -9999.0
 
 # Optional: Set specific variables to use (set to None to search for best fit)
 # If set, the script will only use these variables and skip the model search
-# YCOL = '3_estimated_outflow_pop_from_2_outflow_max'  # e.g., '3_estimated_outflow_pop_from_2_outflow_max' or None to search
-# FLOOD_VAR = '4_flood_p95'  # e.g., '4_flood_p95' or None to search
-# WASTE_VAR = '4_waste_count'  # e.g., '4_waste_count' or None to search
+YCOL = '3_estimated_outflow_pop_from_2_outflow_max'  # e.g., '3_estimated_outflow_pop_from_2_outflow_max' or None to search
+FLOOD_VAR = '4_flood_p95'  # e.g., '4_flood_p95' or None to search
+WASTE_VAR = '4_waste_count'  # e.g., '4_waste_count' or None to search
 
-YCOL = None
-FLOOD_VAR = None
-WASTE_VAR = None
+# YCOL = None
+# FLOOD_VAR = None
+# WASTE_VAR = None
 
 # -------------------- Helper functions --------------------
 def find_candidates(subs, cols):
@@ -417,11 +417,7 @@ else:
     print(f"\nFound {len(res_df):,} candidate models; showing top {n_show}:")
     print(res_df.head(n_show).to_string(index=False))
     
-    # Save results
-    res_df.to_csv(OUT_DIR / "wasteflood_no_interaction_model_search_results.csv", index=False)
-    print(f"\nModel search results saved to: {OUT_DIR / 'wasteflood_no_interaction_model_search_results.csv'}")
-    
-    # Create enhanced CSV with R2, flood variable (name + coefficient + p-value), waste variable (name + coefficient + p-value)
+    # Create enhanced CSV with R2, flood/waste coefficients and p-values (single search output)
     enhanced_results = []
     for r in results:
         model = r['model_obj']
@@ -522,14 +518,15 @@ with open(OUT_DIR / "ols_summary.txt", "w") as f:
 
 model_gdf['residuals'] = ols.resid
 
-# Save OLS coefficients
-coef_df = pd.DataFrame({
+# OLS coefficients (saved combined with SLM/SEM in spatial branch)
+coef_ols = pd.DataFrame({
+    'model': ['OLS'] * 3,
     'variable': ['const', fcol, wcol],
     'coefficient': [ols.params.iloc[0], ols.params.iloc[1], ols.params.iloc[2]],
     'std_err': [ols.bse.iloc[0], ols.bse.iloc[1], ols.bse.iloc[2]],
+    'z_stat': [np.nan, np.nan, np.nan],
     'p_value': [ols.pvalues.iloc[0], ols.pvalues.iloc[1], ols.pvalues.iloc[2]]
 })
-coef_df.to_csv(OUT_DIR / "ols_coefficients.csv", index=False)
 
 # -------------------- STEP 5: Spatial weights & Moran's I --------------------
 print("\nSTEP 5: Building spatial weights (Queen contiguity) and testing residual spatial autocorrelation...")
@@ -544,12 +541,12 @@ if mi is None:
     raise RuntimeError("Moran's I calculation failed.")
 print(f"\nMoran's I on OLS residuals: I={mi.I:.4f}, Expected={mi.EI:.4f}, z={mi.z_norm:.3f}, p_perm={mi.p_sim:.4g}")
 
-# Save Moran's I results
-moran_results = pd.DataFrame({
+# Moran's I for OLS (saved combined with SLM/SEM later)
+moran_ols = pd.DataFrame({
+    'model': ['OLS'] * 4,
     'statistic': ['Moran\'s I', 'Expected I', 'z-score', 'p-value'],
     'value': [mi.I, mi.EI, mi.z_norm, mi.p_sim]
 })
-moran_results.to_csv(OUT_DIR / "moran_i_results.csv", index=False)
 
 # -------------------- STEP 6: Spatial Models --------------------
 spatial_threshold_p = 0.05
@@ -593,23 +590,26 @@ if mi.p_sim < spatial_threshold_p:
     if slm_resid is not None:
         mi_slm = safe_moran(pd.Series(slm_resid), w, permutations=N_PERM)
         print(f"\nMoran's I on SLM residuals: I={mi_slm.I:.4f}, p_perm={mi_slm.p_sim:.4g}, z={mi_slm.z_norm:.3f}")
-        # Save SLM residual Moran's I
-        slm_moran_results = pd.DataFrame({
+        moran_slm = pd.DataFrame({
+            'model': ['SLM'] * 4,
             'statistic': ['Moran\'s I', 'Expected I', 'z-score', 'p-value'],
             'value': [mi_slm.I, mi_slm.EI, mi_slm.z_norm, mi_slm.p_sim]
         })
-        slm_moran_results.to_csv(OUT_DIR / "slm_moran_i_results.csv", index=False)
-        print(f"SLM residual Moran's I saved to: {OUT_DIR / 'slm_moran_i_results.csv'}")
+    else:
+        moran_slm = pd.DataFrame(columns=['model', 'statistic', 'value'])
     if sem_resid is not None:
         mi_sem = safe_moran(pd.Series(sem_resid), w, permutations=N_PERM)
         print(f"Moran's I on SEM residuals: I={mi_sem.I:.4f}, p_perm={mi_sem.p_sim:.4g}, z={mi_sem.z_norm:.3f}")
-        # Save SEM residual Moran's I
-        sem_moran_results = pd.DataFrame({
+        moran_sem = pd.DataFrame({
+            'model': ['SEM'] * 4,
             'statistic': ['Moran\'s I', 'Expected I', 'z-score', 'p-value'],
             'value': [mi_sem.I, mi_sem.EI, mi_sem.z_norm, mi_sem.p_sim]
         })
-        sem_moran_results.to_csv(OUT_DIR / "sem_moran_i_results.csv", index=False)
-        print(f"SEM residual Moran's I saved to: {OUT_DIR / 'sem_moran_i_results.csv'}")
+    else:
+        moran_sem = pd.DataFrame(columns=['model', 'statistic', 'value'])
+    moran_combined = pd.concat([moran_ols, moran_slm, moran_sem], ignore_index=True)
+    moran_combined.to_csv(OUT_DIR / "moran_i_results.csv", index=False)
+    print(f"Moran's I results (OLS + SLM + SEM) saved to: {OUT_DIR / 'moran_i_results.csv'}")
     
     # Save SLM/SEM summaries
     with open(OUT_DIR / "slm_summary.txt", "w") as f:
@@ -624,22 +624,15 @@ if mi.p_sim < spatial_threshold_p:
     summary_text = str(getattr(slm, 'summary', slm))
     impacts_list = parse_impacts_from_summary(summary_text)
     
+    pseudo_r2_val = np.nan
     if impacts_list:
-        # Use spreg's impacts table exactly as provided - no modifications
-        # The parse function already uses correct column names (Direct, Indirect, Total)
         impacts_df = pd.DataFrame(impacts_list)
         impacts_df = impacts_df.set_index('variable')
-        
         print("\nSLM impacts (from spreg's canonical summary output):")
         print(impacts_df.round(4).to_string())
-        
-        # Save impacts exactly as spreg provides them (Direct, Indirect, Total columns)
-        impacts_file = OUT_DIR / "slm_impacts_spreg_summary.csv"
-        impacts_df.to_csv(impacts_file)
-        print(f"Impacts saved to: {impacts_file}")
+        impacts_for_metrics = impacts_list
     else:
         print("⚠️  WARNING: Could not parse impacts from summary text. Falling back to manual computation.")
-        # Fallback to manual computation
         def extract_params(spreg_obj):
             rho = getattr(spreg_obj, 'rho', None)
             if rho is None:
@@ -648,30 +641,22 @@ if mi.p_sim < spatial_threshold_p:
                 rho_val = float(np.asarray(rho).flatten()[0])
             except Exception:
                 rho_val = float(rho)
-            # betas may be (k+1)x1 including constant
             betas = np.asarray(getattr(spreg_obj, 'betas', getattr(spreg_obj, 'beta', getattr(spreg_obj, 'b', None))))
             betas = betas.flatten()
             return rho_val, betas
-        
         rho, betas = extract_params(slm)
         print(f"Estimated rho: {rho:.5f}")
-        
-        # Determine varnames
         try:
             varnames = list(slm.name_x)
         except Exception:
             varnames = list(X_df.columns)
-        
-        # Align betas: many spreg versions have betas with constant first
         if len(betas) == len(varnames) + 1:
             beta_no_const = betas[1:]
         elif len(betas) == len(varnames):
             beta_no_const = betas
         else:
             beta_no_const = betas[:len(varnames)]
-        
         beta_series = pd.Series(beta_no_const, index=varnames)
-        
         W_full = w.full()[0]
         n = W_full.shape[0]
         I_mat = np.eye(n)
@@ -681,40 +666,41 @@ if mi.p_sim < spatial_threshold_p:
             raise RuntimeError("Matrix inversion failed for SLM impacts. Check rho and W. Error: " + str(e))
         diagA = np.diag(A)
         row_sums = A.sum(axis=1)
-        
         effects = []
+        impacts_for_metrics = []
         for nm in varnames:
             beta_j = float(beta_series.get(nm))
             direct = np.mean(diagA) * beta_j
             total = np.mean(row_sums) * beta_j
             indirect = total - direct
             effects.append({'variable': nm, 'beta': beta_j, 'direct_mean': direct, 'indirect_mean': indirect, 'total_mean': total})
-        
+            impacts_for_metrics.append({'variable': nm, 'direct': direct, 'indirect': indirect, 'total': total})
         effects_df = pd.DataFrame(effects).set_index('variable')
         print("\nSLM point-estimate impacts (manual computation fallback):")
         print(effects_df.round(4).to_string())
-        
-        # Save impacts with different name to indicate manual computation
-        impacts_file = OUT_DIR / "slm_impacts_manual_computation.csv"
-        effects_df.to_csv(impacts_file)
-        print(f"⚠️  Manual computation impacts saved to: {impacts_file}")
     
-    # Pseudo R^2
     try:
         y_obs = np.asarray(y).flatten()
         yhat = np.asarray(slm.predy).flatten()
         ssr = np.sum((y_obs - yhat)**2)
         sst = np.sum((y_obs - y_obs.mean())**2)
-        pseudo_r2 = 1 - ssr / sst
-        print(f"\nPseudo R^2 (SLM): {pseudo_r2:.4f}")
-        
-        # Save pseudo R^2
-        pseudo_r2_df = pd.DataFrame({'pseudo_r2': [pseudo_r2]})
-        pseudo_r2_df.to_csv(OUT_DIR / "slm_pseudo_r2.csv", index=False)
+        pseudo_r2_val = 1 - ssr / sst
+        print(f"\nPseudo R^2 (SLM): {pseudo_r2_val:.4f}")
     except Exception:
         print("Could not compute pseudo R^2 for SLM (predictions unavailable).")
     
-    # Save SLM coefficients
+    # Save SLM metrics (pseudo R² + impacts) in one file
+    slm_metrics_rows = [{'metric': 'pseudo_r2', 'value': pseudo_r2_val}]
+    for row in (impacts_for_metrics if impacts_list else impacts_for_metrics):
+        v = row['variable']
+        # Parsed summary uses 'Direct'/'Indirect'/'Total'; fallback uses 'direct'/'indirect'/'total'
+        slm_metrics_rows.append({'metric': f'{v}_Direct', 'value': row.get('Direct', row.get('direct'))})
+        slm_metrics_rows.append({'metric': f'{v}_Indirect', 'value': row.get('Indirect', row.get('indirect'))})
+        slm_metrics_rows.append({'metric': f'{v}_Total', 'value': row.get('Total', row.get('total'))})
+    pd.DataFrame(slm_metrics_rows).to_csv(OUT_DIR / "slm_metrics.csv", index=False)
+    print(f"SLM metrics (pseudo R² + impacts) saved to: {OUT_DIR / 'slm_metrics.csv'}")
+    
+    # Build SLM coefficients (saved combined with OLS/SEM later)
     # NOTE: For publication, report:
     #   - ρ (rho) and its p-value
     #   - β for waste and its p-value
@@ -732,14 +718,13 @@ if mi.p_sim < spatial_threshold_p:
     p_value_arr = 2 * (1 - stats.norm.cdf(np.abs(z_stat_arr)))
     
     slm_coef_df = pd.DataFrame({
+        'model': ['SLM'] * 4,
         'variable': ['const', fcol, wcol, 'rho'],
         'coefficient': [betas_arr[0], betas_arr[1], betas_arr[2], rho_val],
         'std_err': [std_err_arr[0], std_err_arr[1], std_err_arr[2], std_err_arr[3]],
         'z_stat': [z_stat_arr[0], z_stat_arr[1], z_stat_arr[2], z_stat_arr[3]],
         'p_value': [p_value_arr[0], p_value_arr[1], p_value_arr[2], p_value_arr[3]]
     })
-    slm_coef_df.to_csv(OUT_DIR / "slm_coefficients.csv", index=False)
-    print(f"SLM coefficients saved to: {OUT_DIR / 'slm_coefficients.csv'}")
     
     # Save SEM coefficients
     try:
@@ -761,6 +746,7 @@ if mi.p_sim < spatial_threshold_p:
     if lam_val is not None:
         sem_vars.append('lambda')
         sem_coef_df = pd.DataFrame({
+            'model': ['SEM'] * len(sem_vars),
             'variable': sem_vars,
             'coefficient': [sem_betas_arr[0], sem_betas_arr[1], sem_betas_arr[2], lam_val],
             'std_err': [sem_std_err_arr[0], sem_std_err_arr[1], sem_std_err_arr[2], sem_std_err_arr[3]],
@@ -769,14 +755,17 @@ if mi.p_sim < spatial_threshold_p:
         })
     else:
         sem_coef_df = pd.DataFrame({
+            'model': ['SEM'] * len(sem_vars),
             'variable': sem_vars,
             'coefficient': [sem_betas_arr[0], sem_betas_arr[1], sem_betas_arr[2]],
             'std_err': [sem_std_err_arr[0], sem_std_err_arr[1], sem_std_err_arr[2]],
             'z_stat': [sem_z_stat_arr[0], sem_z_stat_arr[1], sem_z_stat_arr[2]],
             'p_value': [sem_p_value_arr[0], sem_p_value_arr[1], sem_p_value_arr[2]]
         })
-    sem_coef_df.to_csv(OUT_DIR / "sem_coefficients.csv", index=False)
-    print(f"SEM coefficients saved to: {OUT_DIR / 'sem_coefficients.csv'}")
+    # Save combined coefficients (OLS + SLM + SEM)
+    coef_combined = pd.concat([coef_ols, slm_coef_df, sem_coef_df], ignore_index=True)
+    coef_combined.to_csv(OUT_DIR / "coefficients.csv", index=False)
+    print(f"Coefficients (OLS + SLM + SEM) saved to: {OUT_DIR / 'coefficients.csv'}")
     
     # Model Comparison
     comp_df = print_model_comparison(ols, slm=slm, sem=sem)
@@ -787,7 +776,11 @@ if mi.p_sim < spatial_threshold_p:
 else:
     print(f"\nNo significant spatial autocorrelation detected (p >= {spatial_threshold_p}). OLS may be adequate with robust SEs.")
     print("Still consider reporting the Moran's I test and the OLS model diagnostics.")
-    
+    moran_ols.to_csv(OUT_DIR / "moran_i_results.csv", index=False)
+    print(f"Moran's I results (OLS only) saved to: {OUT_DIR / 'moran_i_results.csv'}")
+    # Save OLS-only coefficients (same combined format)
+    coef_ols.to_csv(OUT_DIR / "coefficients.csv", index=False)
+    print(f"Coefficients (OLS only) saved to: {OUT_DIR / 'coefficients.csv'}")
     # Save OLS-only comparison
     comp_df = print_model_comparison(ols)
     comp_df.to_csv(OUT_DIR / "model_comparison.csv", index=False)

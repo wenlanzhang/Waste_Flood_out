@@ -1,0 +1,11 @@
+metric,value
+pseudo_r2,0.8489994705100508
+4_flood_mean_Direct,135.4763
+4_flood_mean_Indirect,18.1354
+4_flood_mean_Total,153.6117
+4_waste_count_Direct,-7.9269
+4_waste_count_Indirect,-1.0611
+4_waste_count_Total,-8.988
+3_fb_baseline_median_Direct,0.3955
+3_fb_baseline_median_Indirect,0.0529
+3_fb_baseline_median_Total,0.4485

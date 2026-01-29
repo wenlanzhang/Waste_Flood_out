@@ -1,0 +1,41 @@
+Spatial Lag Model (SLM) Summary
+================================================================================
+Dependent variable: 3_estimated_outflow_pop_from_2_outflow_max
+Flood variable:     4_flood_p95
+Waste variable:     4_waste_count
+Population variable: 3_worldpop
+================================================================================
+
+REGRESSION RESULTS
+------------------
+
+SUMMARY OF OUTPUT: MAXIMUM LIKELIHOOD SPATIAL LAG (METHOD = FULL)
+-----------------------------------------------------------------
+Data set            :     unknown
+Weights matrix      :           w
+Dependent Variable  :3_estimated_outflow_pop_from_2_outflow_max                Number of Observations:         250
+Mean dependent var  :   4507.9230                Number of Variables   :           5
+S.D. dependent var  :  10114.3106                Degrees of Freedom    :         245
+Pseudo R-squared    :      0.6677
+Spatial Pseudo R-squared:  0.6480
+Log likelihood      :  -2523.2431
+Sigma-square ML     :33861657.8434                Akaike info criterion :    5056.486
+S.E of regression   :   5819.0771                Schwarz criterion     :    5074.094
+
+------------------------------------------------------------------------------------
+            Variable     Coefficient       Std.Error     z-Statistic     Probability
+------------------------------------------------------------------------------------
+            CONSTANT       -45.80181       534.40837        -0.08571         0.93170
+         4_flood_p95       -32.03685       336.67740        -0.09516         0.92419
+       4_waste_count        55.76491        19.28453         2.89169         0.00383
+          3_worldpop         0.09930         0.01305         7.60840         0.00000
+W_3_estimated_outflow_pop_from_2_outflow_max         0.25154         0.07205         3.49110         0.00048
+------------------------------------------------------------------------------------
+
+SPATIAL LAG MODEL IMPACTS
+Impacts computed using the 'simple' method.
+            Variable         Direct        Indirect          Total
+         4_flood_p95       -32.0369        -10.7668        -42.8036
+       4_waste_count        55.7649         18.7411         74.5060
+          3_worldpop         0.0993          0.0334          0.1327
+================================ END OF REPORT =====================================

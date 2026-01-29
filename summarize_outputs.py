@@ -74,18 +74,19 @@ def load_coefficients(file_path, model_name, model_type="OLS"):
         print(f"Error loading {file_path}: {e}")
         return None
 
-def load_moran_results(file_path):
-    """Load Moran's I results and return as dict."""
+def load_moran_results(file_path, model_filter=None):
+    """Load Moran's I results and return as dict. If model_filter is set and CSV has 'model' column, use only that model's rows."""
     if not file_path.exists():
         return None
     try:
         df = pd.read_csv(file_path)
-        # Convert to dict with statistic as key
+        if model_filter is not None and "model" in df.columns:
+            df = df[df["model"] == model_filter]
         moran_dict = {}
-        if 'statistic' in df.columns and 'value' in df.columns:
+        if "statistic" in df.columns and "value" in df.columns:
             for _, row in df.iterrows():
-                moran_dict[row['statistic']] = row['value']
-        return moran_dict
+                moran_dict[row["statistic"]] = row["value"]
+        return moran_dict if moran_dict else None
     except Exception as e:
         print(f"Error loading Moran's I from {file_path}: {e}")
         return None
@@ -164,76 +165,74 @@ print("="*80)
 
 all_coefs = []
 
-# Flood-only models
+# Flood-only models (single combined coefficients file)
 flood_dir = OUTPUT_BASE / "flood"
-if flood_dir.exists():
-    ols_file = flood_dir / "flood_only_ols_coefficients.csv"
-    slm_file = flood_dir / "flood_only_slm_coefficients.csv"
-    sem_file = flood_dir / "flood_only_sem_coefficients.csv"
-    
-    df_ols = load_coefficients(ols_file, "Flood-only", "OLS")
-    if df_ols is not None:
-        all_coefs.append(df_ols)
-        print(f"Loaded: {ols_file.name}")
-    
-    df_slm = load_coefficients(slm_file, "Flood-only", "SLM")
-    if df_slm is not None:
-        all_coefs.append(df_slm)
-        print(f"Loaded: {slm_file.name}")
-    
-    df_sem = load_coefficients(sem_file, "Flood-only", "SEM")
-    if df_sem is not None:
-        all_coefs.append(df_sem)
-        print(f"Loaded: {sem_file.name}")
+coef_flood_file = flood_dir / "flood_only_coefficients.csv"
+if flood_dir.exists() and coef_flood_file.exists():
+    try:
+        df_flood = pd.read_csv(coef_flood_file)
+        for model_type in ["OLS", "SLM", "SEM"]:
+            subset = df_flood[df_flood["model"] == model_type].copy()
+            if len(subset) == 0:
+                continue
+            subset = subset.drop(columns=["model"], errors="ignore")
+            subset["model_name"] = "Flood-only"
+            subset["model_type"] = model_type
+            for col in ["variable", "coefficient", "std_err", "p_value"]:
+                if col not in subset.columns:
+                    subset[col] = np.nan
+            subset = subset[["variable", "coefficient", "std_err", "p_value", "model_name", "model_type"]]
+            all_coefs.append(subset)
+            print(f"Loaded: {coef_flood_file.name} (model={model_type})")
+    except Exception as e:
+        print(f"Error loading {coef_flood_file}: {e}")
 
-# Flood + Waste models
+# Flood + Waste models (single combined coefficients.csv)
 wasteflood_dir = OUTPUT_BASE / "wasteflood"
-if wasteflood_dir.exists():
-    ols_file = wasteflood_dir / "ols_coefficients.csv"
-    slm_file = wasteflood_dir / "slm_coefficients.csv"
-    sem_file = wasteflood_dir / "sem_coefficients.csv"
-    
-    df_ols = load_coefficients(ols_file, "Flood+Waste", "OLS")
-    if df_ols is not None:
-        all_coefs.append(df_ols)
-        print(f"Loaded: {ols_file.name}")
-    
-    df_slm = load_coefficients(slm_file, "Flood+Waste", "SLM")
-    if df_slm is not None:
-        all_coefs.append(df_slm)
-        print(f"Loaded: {slm_file.name}")
-    
-    df_sem = load_coefficients(sem_file, "Flood+Waste", "SEM")
-    if df_sem is not None:
-        all_coefs.append(df_sem)
-        print(f"Loaded: {sem_file.name}")
+coef_wasteflood_file = wasteflood_dir / "coefficients.csv"
+if wasteflood_dir.exists() and coef_wasteflood_file.exists():
+    try:
+        df_wf = pd.read_csv(coef_wasteflood_file)
+        if "model" in df_wf.columns:
+            for mtype in ["OLS", "SLM", "SEM"]:
+                subset = df_wf[df_wf["model"] == mtype].copy()
+                if len(subset) == 0:
+                    continue
+                subset = subset.drop(columns=["model"], errors="ignore")
+                subset["model_name"] = "Flood+Waste"
+                subset["model_type"] = mtype
+                for col in ["variable", "coefficient", "std_err", "p_value"]:
+                    if col not in subset.columns:
+                        subset[col] = np.nan
+                subset = subset[["variable", "coefficient", "std_err", "p_value", "model_name", "model_type"]]
+                all_coefs.append(subset)
+                print(f"Loaded: {coef_wasteflood_file.name} (model={mtype})")
+    except Exception as e:
+        print(f"Error loading {coef_wasteflood_file}: {e}")
 
-# Flood + Waste + Population models (may have FILE_ID suffixes)
+# Flood + Waste + Population models (combined coefficients_{FILE_ID}.csv)
 wastefloodpop_dir = OUTPUT_BASE / "wastefloodpop"
-if wastefloodpop_dir.exists():
-    # Find all coefficient files (they have FILE_ID suffixes)
-    ols_files = list(wastefloodpop_dir.glob("ols_coefficients_*.csv"))
-    slm_files = list(wastefloodpop_dir.glob("slm_coefficients_*.csv"))
-    sem_files = list(wastefloodpop_dir.glob("sem_coefficients_*.csv"))
-    
-    # For now, use the first one found (or you can process all)
-    if ols_files:
-        df_ols = load_coefficients(ols_files[0], "Flood+Waste+Pop", "OLS")
-        if df_ols is not None:
-            all_coefs.append(df_ols)
-            print(f"Loaded: {ols_files[0].name}")
-    
-    if slm_files:
-        df_slm = load_coefficients(slm_files[0], "Flood+Waste+Pop", "SLM")
-        if df_slm is not None:
-            all_coefs.append(df_slm)
-            print(f"Loaded: {slm_files[0].name}")
-    
-    if sem_files:
-        df_sem = load_coefficients(sem_files[0], "Flood+Waste+Pop", "SEM")
-        if df_sem is not None:
-            all_coefs.append(df_sem)
-            print(f"Loaded: {sem_files[0].name}")
+coef_wastefloodpop_files = list(wastefloodpop_dir.glob("coefficients_*.csv")) if wastefloodpop_dir.exists() else []
+if coef_wastefloodpop_files:
+    coef_wfp_file = coef_wastefloodpop_files[0]
+    try:
+        df_wfp = pd.read_csv(coef_wfp_file)
+        if "model" in df_wfp.columns:
+            for model_type in ["OLS", "SLM", "SEM"]:
+                subset = df_wfp[df_wfp["model"] == model_type].copy()
+                if len(subset) == 0:
+                    continue
+                subset = subset.drop(columns=["model"], errors="ignore")
+                subset["model_name"] = "Flood+Waste+Pop"
+                subset["model_type"] = model_type
+                for col in ["variable", "coefficient", "std_err", "p_value"]:
+                    if col not in subset.columns:
+                        subset[col] = np.nan
+                subset = subset[["variable", "coefficient", "std_err", "p_value", "model_name", "model_type"]]
+                all_coefs.append(subset)
+                print(f"Loaded: {coef_wfp_file.name} (model={model_type})")
+    except Exception as e:
+        print(f"Error loading {coef_wfp_file}: {e}")
 
 if not all_coefs:
     raise RuntimeError("No coefficient files found. Run model scripts first.")
@@ -408,75 +407,75 @@ robustness_rows = []
 flood_coefs = coefs_all[(coefs_all['model_name'] == 'Flood-only')].copy()
 if len(flood_coefs) > 0:
     moran_file = flood_dir / "flood_only_moran_i_results.csv"
-    moran_dict = load_moran_results(moran_file)
+    # Combined Moran file: filter by model for each type
+    moran_dict = load_moran_results(moran_file, model_filter="OLS")
     
-    # For flood-only, extract adj R² from OLS summary or pseudo R² files
     comp_dict = {}
-    # Try to read OLS summary for adj R² (would need parsing, but for now use pseudo R² for SLM)
-    slm_pseudo_r2_file = flood_dir / "flood_only_slm_pseudo_r2.csv"
-    slm_pseudo_r2 = load_pseudo_r2(slm_pseudo_r2_file)
-    if slm_pseudo_r2:
-        comp_dict['SLM'] = slm_pseudo_r2
+    slm_metrics_file = flood_dir / "flood_only_slm_metrics.csv"
+    if slm_metrics_file.exists():
+        try:
+            _sm = pd.read_csv(slm_metrics_file)
+            _row = _sm[_sm["metric"] == "pseudo_r2"]
+            if len(_row) > 0:
+                comp_dict["SLM"] = float(_row["value"].iloc[0])
+        except Exception:
+            pass
     
     for model_type in ['OLS', 'SLM', 'SEM']:
         subset = flood_coefs[flood_coefs['model_type'] == model_type]
         if len(subset) > 0:
-            # For SLM/SEM, try to get residual Moran's I
-            if model_type == 'SLM':
-                slm_moran_file = flood_dir / "flood_only_slm_moran_i_results.csv"
-                moran_dict = load_moran_results(slm_moran_file) or moran_dict
-            elif model_type == 'SEM':
-                sem_moran_file = flood_dir / "flood_only_sem_moran_i_results.csv"
-                moran_dict = load_moran_results(sem_moran_file) or moran_dict
-            
+            moran_dict = load_moran_results(moran_file, model_filter=model_type) or moran_dict
             summary = create_robustness_summary(subset, moran_dict, comp_dict, "Flood-only", model_type)
             robustness_rows.append(summary)
 
-# Flood+Waste
+# Flood+Waste (combined moran_i_results.csv with model column)
 wasteflood_coefs = coefs_all[(coefs_all['model_name'] == 'Flood+Waste')].copy()
 if len(wasteflood_coefs) > 0:
     moran_file = wasteflood_dir / "moran_i_results.csv"
     comp_file = wasteflood_dir / "model_comparison.csv"
-    moran_dict = load_moran_results(moran_file)
     comp_dict = load_model_comparison(comp_file)
+    # Add SLM pseudo R² from slm_metrics.csv if present
+    slm_metrics_file = wasteflood_dir / "slm_metrics.csv"
+    if slm_metrics_file.exists():
+        try:
+            _sm = pd.read_csv(slm_metrics_file)
+            _row = _sm[_sm["metric"] == "pseudo_r2"]
+            if len(_row) > 0:
+                comp_dict = comp_dict or {}
+                comp_dict["SLM"] = float(_row["value"].iloc[0])
+        except Exception:
+            pass
     
     for model_type in ['OLS', 'SLM', 'SEM']:
         subset = wasteflood_coefs[wasteflood_coefs['model_type'] == model_type]
         if len(subset) > 0:
-            # For SLM/SEM, use residual Moran's I
-            if model_type == 'SLM':
-                slm_moran_file = wasteflood_dir / "slm_moran_i_results.csv"
-                moran_dict = load_moran_results(slm_moran_file) or moran_dict
-            elif model_type == 'SEM':
-                sem_moran_file = wasteflood_dir / "sem_moran_i_results.csv"
-                moran_dict = load_moran_results(sem_moran_file) or moran_dict
-            
+            moran_dict = load_moran_results(moran_file, model_filter=model_type)
             summary = create_robustness_summary(subset, moran_dict, comp_dict, "Flood+Waste", model_type)
             robustness_rows.append(summary)
 
-# Flood+Waste+Pop
+# Flood+Waste+Pop (combined moran_i_results_{FILE_ID}.csv and slm_metrics_{FILE_ID}.csv)
 wastefloodpop_coefs = coefs_all[(coefs_all['model_name'] == 'Flood+Waste+Pop')].copy()
 if len(wastefloodpop_coefs) > 0:
-    # Find moran and comparison files (they have FILE_ID suffixes)
     moran_files = list(wastefloodpop_dir.glob("moran_i_results_*.csv"))
     comp_files = list(wastefloodpop_dir.glob("model_comparison_*.csv"))
+    slm_metrics_files = list(wastefloodpop_dir.glob("slm_metrics_*.csv"))
     
-    moran_dict = load_moran_results(moran_files[0]) if moran_files else None
     comp_dict = load_model_comparison(comp_files[0]) if comp_files else None
+    if slm_metrics_files:
+        try:
+            _sm = pd.read_csv(slm_metrics_files[0])
+            _row = _sm[_sm["metric"] == "pseudo_r2"]
+            if len(_row) > 0:
+                comp_dict = comp_dict or {}
+                comp_dict["SLM"] = float(_row["value"].iloc[0])
+        except Exception:
+            pass
     
+    moran_file = moran_files[0] if moran_files else None
     for model_type in ['OLS', 'SLM', 'SEM']:
         subset = wastefloodpop_coefs[wastefloodpop_coefs['model_type'] == model_type]
         if len(subset) > 0:
-            # For SLM/SEM, use residual Moran's I
-            if model_type == 'SLM':
-                slm_moran_files = list(wastefloodpop_dir.glob("slm_moran_i_results_*.csv"))
-                if slm_moran_files:
-                    moran_dict = load_moran_results(slm_moran_files[0])
-            elif model_type == 'SEM':
-                sem_moran_files = list(wastefloodpop_dir.glob("sem_moran_i_results_*.csv"))
-                if sem_moran_files:
-                    moran_dict = load_moran_results(sem_moran_files[0])
-            
+            moran_dict = load_moran_results(moran_file, model_filter=model_type) if moran_file else None
             summary = create_robustness_summary(subset, moran_dict, comp_dict, "Flood+Waste+Pop", model_type)
             robustness_rows.append(summary)
 
@@ -506,11 +505,9 @@ manifest_lines = [
     f"- `{SUMMARY_OUT_DIR.name}/table_main_regression_combined.csv` - Combined format (coef*** (SE))",
     f"- `{SUMMARY_OUT_DIR.name}/table_main_regression_long.csv` - Long format for analysis",
     "- Source files:",
-    "  - `Output/flood/flood_only_ols_coefficients.csv`",
-    "  - `Output/wasteflood/ols_coefficients.csv`",
-    "  - `Output/wasteflood/slm_coefficients.csv`",
-    "  - `Output/wastefloodpop/ols_coefficients_*.csv`",
-    "  - `Output/wastefloodpop/slm_coefficients_*.csv`",
+    "  - `Output/flood/flood_only_coefficients.csv`",
+    "  - `Output/wasteflood/coefficients.csv`",
+    "  - `Output/wastefloodpop/coefficients_*.csv`",
     "",
     "### Table S1: Robustness Summary",
     f"- `{SUMMARY_OUT_DIR.name}/supp_robustness_summary.csv` - Sign, significance, adj R², Moran's I across specifications",
@@ -518,34 +515,22 @@ manifest_lines = [
     "## Model Outputs by Directory",
     "",
     "### Output/flood/ (Flood-only models)",
-    "- `flood_only_ols_coefficients.csv` - OLS coefficients",
-    "- `flood_only_slm_coefficients.csv` - Spatial Lag Model coefficients",
-    "- `flood_only_sem_coefficients.csv` - Spatial Error Model coefficients",
-    "- `flood_only_moran_i_results.csv` - Moran's I test on OLS residuals",
-    "- `flood_only_slm_moran_i_results.csv` - Moran's I test on SLM residuals",
-    "- `flood_only_slm_impacts.csv` - SLM direct/indirect/total impacts",
-    "- `flood_only_slm_pseudo_r2.csv` - SLM pseudo R²",
+    "- `flood_only_coefficients.csv` - OLS + SLM + SEM coefficients (model column)",
+    "- `flood_only_moran_i_results.csv` - Moran's I for OLS, SLM, SEM residuals (model column)",
+    "- `flood_only_slm_metrics.csv` - SLM pseudo R² + Direct/Indirect/Total impacts",
     "",
     "### Output/wasteflood/ (Flood + Waste models)",
-    "- `ols_coefficients.csv` - OLS coefficients",
-    "- `slm_coefficients.csv` - Spatial Lag Model coefficients",
-    "- `sem_coefficients.csv` - Spatial Error Model coefficients",
-    "- `moran_i_results.csv` - Moran's I test on OLS residuals",
-    "- `slm_moran_i_results.csv` - Moran's I test on SLM residuals",
-    "- `slm_impacts_spreg_summary.csv` - SLM direct/indirect/total impacts",
-    "- `slm_pseudo_r2.csv` - SLM pseudo R²",
+    "- `coefficients.csv` - OLS + SLM + SEM coefficients (model column)",
+    "- `moran_i_results.csv` - Moran's I for OLS, SLM, SEM residuals (model column)",
+    "- `slm_metrics.csv` - SLM pseudo R² + Direct/Indirect/Total impacts",
     "- `vif_analysis.csv` - Variance Inflation Factor analysis",
     "- `model_comparison.csv` - OLS vs SLM vs SEM comparison",
     "",
     "### Output/wastefloodpop/ (Flood + Waste + Population models)",
     "- Files use FILE_ID suffixes (e.g., `*_Y_outflow_outflow_max_F_flood_p95_W_waste_count_P_fb_baseline.csv`)",
-    "- `ols_coefficients_*.csv` - OLS coefficients",
-    "- `slm_coefficients_*.csv` - Spatial Lag Model coefficients",
-    "- `sem_coefficients_*.csv` - Spatial Error Model coefficients",
-    "- `moran_i_results_*.csv` - Moran's I test on OLS residuals",
-    "- `slm_moran_i_results_*.csv` - Moran's I test on SLM residuals",
-    "- `slm_impacts_spreg_summary_*.csv` - SLM direct/indirect/total impacts",
-    "- `slm_pseudo_r2_*.csv` - SLM pseudo R²",
+    "- `coefficients_*.csv` - OLS + SLM + SEM coefficients (model column)",
+    "- `moran_i_results_*.csv` - Moran's I for OLS, SLM, SEM residuals (model column)",
+    "- `slm_metrics_*.csv` - SLM pseudo R² + Direct/Indirect/Total impacts",
     "- `vif_analysis_*.csv` - Variance Inflation Factor analysis",
     "- `model_comparison_*.csv` - OLS vs SLM vs SEM comparison",
     "",
@@ -667,15 +652,33 @@ def create_coef_stats_table():
         # Try to get from model comparison or summary files
         return None
     
-    # Load model statistics
-    flood_moran = load_moran_results(flood_dir / "flood_only_moran_i_results.csv")
-    flood_slm_pseudo_r2 = load_pseudo_r2(flood_dir / "flood_only_slm_pseudo_r2.csv")
+    # Load model statistics (combined Moran; SLM pseudo R² from slm_metrics)
+    flood_moran = load_moran_results(flood_dir / "flood_only_moran_i_results.csv", model_filter="OLS")
+    flood_slm_pseudo_r2 = None
+    if (flood_dir / "flood_only_slm_metrics.csv").exists():
+        try:
+            _sm = pd.read_csv(flood_dir / "flood_only_slm_metrics.csv")
+            _row = _sm[_sm["metric"] == "pseudo_r2"]
+            if len(_row) > 0:
+                flood_slm_pseudo_r2 = float(_row["value"].iloc[0])
+        except Exception:
+            pass
     
-    # Flood+Waste OLS and SLM
+    # Flood+Waste OLS and SLM (combined moran_i_results.csv and slm_metrics.csv)
     wasteflood_comp = load_model_comparison(wasteflood_dir / "model_comparison.csv")
-    wasteflood_moran_ols = load_moran_results(wasteflood_dir / "moran_i_results.csv")
-    wasteflood_moran_slm = load_moran_results(wasteflood_dir / "slm_moran_i_results.csv")
-    wasteflood_slm_pseudo_r2 = load_pseudo_r2(wasteflood_dir / "slm_pseudo_r2.csv")
+    wasteflood_moran_ols = load_moran_results(wasteflood_dir / "moran_i_results.csv", model_filter="OLS")
+    wasteflood_moran_slm = load_moran_results(wasteflood_dir / "moran_i_results.csv", model_filter="SLM")
+    wasteflood_slm_pseudo_r2 = None
+    if (wasteflood_dir / "slm_metrics.csv").exists():
+        try:
+            _sm = pd.read_csv(wasteflood_dir / "slm_metrics.csv")
+            _row = _sm[_sm["metric"] == "pseudo_r2"]
+            if len(_row) > 0:
+                wasteflood_slm_pseudo_r2 = float(_row["value"].iloc[0])
+        except Exception:
+            pass
+    if wasteflood_slm_pseudo_r2 is None:
+        wasteflood_slm_pseudo_r2 = load_pseudo_r2(wasteflood_dir / "slm_pseudo_r2.csv")
     
     # Get AIC from model comparison
     def get_aic_from_comparison(file_path, model_type):

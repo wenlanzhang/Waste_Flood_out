@@ -172,18 +172,77 @@ print("="*80)
 print("Creating Table 1: Spatial lag model impacts")
 print("="*80)
 
-# Load coefficients
-flood_ols_coefs = load_coefficients(FLOOD_DIR / "flood_only_ols_coefficients.csv")
-wasteflood_ols_coefs = load_coefficients(WASTEFLOOD_DIR / "ols_coefficients.csv")
-wasteflood_slm_coefs = load_coefficients(WASTEFLOOD_DIR / "slm_coefficients.csv")
+# Load coefficients (combined file: filter OLS for flood-only OLS)
+flood_ols_coefs = None
+if (FLOOD_DIR / "flood_only_coefficients.csv").exists():
+    try:
+        _flood_coefs = pd.read_csv(FLOOD_DIR / "flood_only_coefficients.csv")
+        if "model" in _flood_coefs.columns:
+            _ols = _flood_coefs[_flood_coefs["model"] == "OLS"].drop(columns=["model"], errors="ignore")
+        else:
+            _ols = _flood_coefs
+        flood_ols_coefs = _ols if len(_ols) > 0 else None
+    except Exception:
+        flood_ols_coefs = None
+# Wasteflood: combined coefficients.csv (filter OLS and SLM)
+wasteflood_ols_coefs = None
+wasteflood_slm_coefs = None
+if (WASTEFLOOD_DIR / "coefficients.csv").exists():
+    try:
+        _wf_coefs = pd.read_csv(WASTEFLOOD_DIR / "coefficients.csv")
+        if "model" in _wf_coefs.columns:
+            _ols = _wf_coefs[_wf_coefs["model"] == "OLS"].drop(columns=["model"], errors="ignore")
+            _slm = _wf_coefs[_wf_coefs["model"] == "SLM"].drop(columns=["model"], errors="ignore")
+            wasteflood_ols_coefs = _ols if len(_ols) > 0 else None
+            wasteflood_slm_coefs = _slm if len(_slm) > 0 else None
+    except Exception:
+        pass
 
-# Load statistics
-flood_moran = load_moran_results(FLOOD_DIR / "flood_only_moran_i_results.csv")
-wasteflood_moran_ols = load_moran_results(WASTEFLOOD_DIR / "moran_i_results.csv")
-wasteflood_moran_slm = load_moran_results(WASTEFLOOD_DIR / "slm_moran_i_results.csv")
+# Load statistics (combined Moran file: use OLS rows for flood-only)
+flood_moran = None
+if (FLOOD_DIR / "flood_only_moran_i_results.csv").exists():
+    try:
+        _flood_moran_df = pd.read_csv(FLOOD_DIR / "flood_only_moran_i_results.csv")
+        if len(_flood_moran_df) > 0:
+            if "model" in _flood_moran_df.columns:
+                _ols = _flood_moran_df[_flood_moran_df["model"] == "OLS"]
+                if len(_ols) > 0:
+                    flood_moran = dict(zip(_ols["statistic"], _ols["value"]))
+            if flood_moran is None and "statistic" in _flood_moran_df.columns and "value" in _flood_moran_df.columns:
+                flood_moran = dict(zip(_flood_moran_df["statistic"], _flood_moran_df["value"]))
+    except Exception:
+        pass
+# Wasteflood: combined moran_i_results.csv (filter by model for OLS and SLM)
+wasteflood_moran_ols = None
+wasteflood_moran_slm = None
+if (WASTEFLOOD_DIR / "moran_i_results.csv").exists():
+    try:
+        _wf_moran = pd.read_csv(WASTEFLOOD_DIR / "moran_i_results.csv")
+        if "model" in _wf_moran.columns and "statistic" in _wf_moran.columns and "value" in _wf_moran.columns:
+            _ols = _wf_moran[_wf_moran["model"] == "OLS"]
+            _slm = _wf_moran[_wf_moran["model"] == "SLM"]
+            if len(_ols) > 0:
+                wasteflood_moran_ols = dict(zip(_ols["statistic"], _ols["value"]))
+            if len(_slm) > 0:
+                wasteflood_moran_slm = dict(zip(_slm["statistic"], _slm["value"]))
+        else:
+            wasteflood_moran_ols = load_moran_results(WASTEFLOOD_DIR / "moran_i_results.csv")
+    except Exception:
+        pass
 
 wasteflood_comp = load_model_comparison(WASTEFLOOD_DIR / "model_comparison.csv")
-wasteflood_slm_pseudo_r2 = load_pseudo_r2(WASTEFLOOD_DIR / "slm_pseudo_r2.csv")
+# Wasteflood: pseudo R² from slm_metrics.csv (metric/value)
+wasteflood_slm_pseudo_r2 = None
+if (WASTEFLOOD_DIR / "slm_metrics.csv").exists():
+    try:
+        _sm = pd.read_csv(WASTEFLOOD_DIR / "slm_metrics.csv")
+        _row = _sm[_sm["metric"] == "pseudo_r2"]
+        if len(_row) > 0:
+            wasteflood_slm_pseudo_r2 = float(_row["value"].iloc[0])
+    except Exception:
+        pass
+if wasteflood_slm_pseudo_r2 is None:
+    wasteflood_slm_pseudo_r2 = load_pseudo_r2(WASTEFLOOD_DIR / "slm_pseudo_r2.csv")  # fallback
 
 # Parse from summary files
 flood_ols_r2 = parse_adj_r2_from_summary(FLOOD_DIR / "flood_only_ols_summary.txt")

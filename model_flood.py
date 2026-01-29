@@ -71,11 +71,12 @@ FLOOD_SUBS = ['4_flood', '4_flood_p', '4_flood_p95', '4_flood_mean', '4_flood_ma
 
 NODATA = -9999.0
 
-# Optional: Set specific variables to use (set to None to search for best fit)
-# If set, the script will only use these variables and skip the model search
+# Optional: Set specific variables to use
 YCOL = '3_estimated_outflow_pop_from_2_outflow_max'  # e.g., '3_estimated_outflow_pop_from_2_outflow_max' or None to search
 FLOOD_VAR = '4_flood_p95'  # e.g., '4_flood_p95' or None to search
 
+# YCOL = None
+# FLOOD_VAR = None
 
 # -------------------- Helper functions --------------------
 def find_candidates(subs, cols):
@@ -322,11 +323,7 @@ else:
     print(f"\nFound {len(res_flood_df):,} flood-only candidate models; showing top {n_show}:")
     print(res_flood_df.head(n_show).to_string(index=False))
     
-    # Save results
-    res_flood_df.to_csv(OUT_DIR / "flood_only_model_search_results.csv", index=False)
-    print(f"\nFlood-only model search results saved to: {OUT_DIR / 'flood_only_model_search_results.csv'}")
-    
-    # Create enhanced CSV with R2, flood variable (name + coefficient + p-value)
+    # Create enhanced CSV with R2, flood variable (name + coefficient + p-value) — single search output
     enhanced_results = []
     for r in results_flood_only:
         model = r['model_obj']
@@ -350,7 +347,7 @@ else:
     enhanced_df = pd.DataFrame(enhanced_results)
     enhanced_df = enhanced_df.sort_values(['adjr2', 'r2'], ascending=[False, False]).reset_index(drop=True)
     enhanced_df.to_csv(OUT_DIR / "flood_model_search_with_coefficients.csv", index=False)
-    print(f"Enhanced model search results (with coefficients and p-values) saved to: {OUT_DIR / 'flood_model_search_with_coefficients.csv'}")
+    print(f"\nModel search results (with coefficients and p-values) saved to: {OUT_DIR / 'flood_model_search_with_coefficients.csv'}")
     
     # Show best model
     best_flood = res_flood_df.iloc[0]
@@ -402,12 +399,12 @@ print(f"I = {mi_flood.I:.4f}")
 print(f"z = {mi_flood.z_norm:.3f}")
 print(f"p_perm = {mi_flood.p_sim:.4g}")
 
-# Save Moran's I results
-moran_results = pd.DataFrame({
+# Moran's I results (saved combined with SLM/SEM later)
+moran_ols = pd.DataFrame({
+    'model': ['OLS'] * 3,
     'statistic': ['Moran\'s I', 'z-score', 'p-value'],
     'value': [mi_flood.I, mi_flood.z_norm, mi_flood.p_sim]
 })
-moran_results.to_csv(OUT_DIR / "flood_only_moran_i_results.csv", index=False)
 
 # -------------------- Create and save residual map --------------------
 print("\nCreating residual map...")
@@ -514,24 +511,29 @@ sem_pred_flood, sem_resid_flood = get_pred_resid_flood(sem_flood, y_obs_arr)
 if slm_resid_flood is not None:
     mi_slm_flood = safe_moran(pd.Series(slm_resid_flood), w_flood, permutations=999)
     print(f"\nMoran's I on SLM residuals: I={mi_slm_flood.I:.4f}, p_perm={mi_slm_flood.p_sim:.4g}, z={mi_slm_flood.z_norm:.3f}")
-    # Save SLM residual Moran's I
-    slm_moran_results = pd.DataFrame({
+    moran_slm = pd.DataFrame({
+        'model': ['SLM'] * 4,
         'statistic': ['Moran\'s I', 'Expected I', 'z-score', 'p-value'],
         'value': [mi_slm_flood.I, mi_slm_flood.EI, mi_slm_flood.z_norm, mi_slm_flood.p_sim]
     })
-    slm_moran_results.to_csv(OUT_DIR / "flood_only_slm_moran_i_results.csv", index=False)
-    print(f"SLM residual Moran's I saved to: {OUT_DIR / 'flood_only_slm_moran_i_results.csv'}")
+else:
+    moran_slm = pd.DataFrame(columns=['model', 'statistic', 'value'])
 
 if sem_resid_flood is not None:
     mi_sem_flood = safe_moran(pd.Series(sem_resid_flood), w_flood, permutations=999)
     print(f"Moran's I on SEM residuals: I={mi_sem_flood.I:.4f}, p_perm={mi_sem_flood.p_sim:.4g}, z={mi_sem_flood.z_norm:.3f}")
-    # Save SEM residual Moran's I
-    sem_moran_results = pd.DataFrame({
+    moran_sem = pd.DataFrame({
+        'model': ['SEM'] * 4,
         'statistic': ['Moran\'s I', 'Expected I', 'z-score', 'p-value'],
         'value': [mi_sem_flood.I, mi_sem_flood.EI, mi_sem_flood.z_norm, mi_sem_flood.p_sim]
     })
-    sem_moran_results.to_csv(OUT_DIR / "flood_only_sem_moran_i_results.csv", index=False)
-    print(f"SEM residual Moran's I saved to: {OUT_DIR / 'flood_only_sem_moran_i_results.csv'}")
+else:
+    moran_sem = pd.DataFrame(columns=['model', 'statistic', 'value'])
+
+# Save combined Moran's I (OLS + SLM + SEM)
+moran_combined = pd.concat([moran_ols, moran_slm, moran_sem], ignore_index=True)
+moran_combined.to_csv(OUT_DIR / "flood_only_moran_i_results.csv", index=False)
+print(f"Moran's I results (OLS + SLM + SEM) saved to: {OUT_DIR / 'flood_only_moran_i_results.csv'}")
 
 # -------------------- Pseudo R^2 for flood-only SLM --------------------
 y_hat = slm_flood.predy.flatten()
@@ -542,10 +544,6 @@ sst = np.sum((y_obs_arr - y_obs_arr.mean())**2)
 pseudo_r2_flood = 1 - ssr / sst
 print(f"\nFlood-only SLM pseudo R^2: {pseudo_r2_flood:.4f}")
 
-# Save pseudo R^2
-pseudo_r2_df = pd.DataFrame({'pseudo_r2': [pseudo_r2_flood]})
-pseudo_r2_df.to_csv(OUT_DIR / "flood_only_slm_pseudo_r2.csv", index=False)
-
 # -------------------- Compute flood-only impacts --------------------
 # Read impacts directly from spreg's canonical summary output
 print("\nExtracting flood-only SLM impacts from summary text...")
@@ -553,57 +551,50 @@ summary_text = str(slm_flood.summary)
 impacts_list = parse_impacts_from_summary(summary_text)
 
 if impacts_list:
-    # Convert to DataFrame
     impacts_df = pd.DataFrame(impacts_list)
     impacts_df = impacts_df.set_index('variable')
-    
     print("\nFlood-only SLM impacts (from spreg summary):")
     print(impacts_df.round(4).to_string())
-    
-    # Save impacts
-    impacts_df.to_csv(OUT_DIR / "flood_only_slm_impacts.csv")
-    print(f"\nImpacts saved to: {OUT_DIR / 'flood_only_slm_impacts.csv'}")
+    row = impacts_list[0]
+    direct_val, indirect_val, total_val = row['direct'], row['indirect'], row['total']
 else:
     print("⚠️  WARNING: Could not parse impacts from summary text. Falling back to manual computation.")
-    # Fallback to manual computation
     rho_flood = float(slm_flood.rho)
     W = w_flood.full()[0]
     I = np.eye(W.shape[0])
     A = inv(I - rho_flood * W)
-    
     diagA = np.diag(A)
     rowSums = A.sum(axis=1)
-    
-    beta_flood = slm_flood.betas[1][0]  # flood coefficient
-    
-    direct = np.mean(diagA) * beta_flood
-    total = np.mean(rowSums) * beta_flood
-    indirect = total - direct
-    
-    print("\nFlood-only SLM impacts (manual computation):")
-    print(f"Direct effect:   {direct:.2f}")
-    print(f"Indirect effect: {indirect:.2f}")
-    print(f"Total effect:    {total:.2f}")
-    
-    # Save impacts
-    impacts_df = pd.DataFrame({
-        'effect_type': ['Direct', 'Indirect', 'Total'],
-        'value': [direct, indirect, total]
-    })
-    impacts_df.to_csv(OUT_DIR / "flood_only_slm_impacts.csv", index=False)
+    beta_flood = slm_flood.betas[1][0]
+    direct_val = np.mean(diagA) * beta_flood
+    total_val = np.mean(rowSums) * beta_flood
+    indirect_val = total_val - direct_val
+    print("\nFlood-only SLM impacts (manual):")
+    print(f"Direct: {direct_val:.2f}, Indirect: {indirect_val:.2f}, Total: {total_val:.2f}")
+
+# Save SLM pseudo R² + impacts in one file
+slm_metrics_df = pd.DataFrame([
+    {'metric': 'pseudo_r2', 'value': pseudo_r2_flood},
+    {'metric': 'Direct', 'value': direct_val},
+    {'metric': 'Indirect', 'value': indirect_val},
+    {'metric': 'Total', 'value': total_val}
+])
+slm_metrics_df.to_csv(OUT_DIR / "flood_only_slm_metrics.csv", index=False)
+print(f"SLM metrics (pseudo R² + impacts) saved to: {OUT_DIR / 'flood_only_slm_metrics.csv'}")
 
 # -------------------- Save model objects and data --------------------
 # Save flood_df with residuals
 flood_df.to_file(OUT_DIR / "flood_only_model_data.gpkg", driver="GPKG", layer="flood_only_data")
 
-# Save model coefficients
-coef_df = pd.DataFrame({
+# Build OLS coefficients (z_stat = NaN for OLS)
+coef_ols = pd.DataFrame({
+    'model': ['OLS'] * 2,
     'variable': ['const', flood_var],
     'coefficient': [ols_flood.params.iloc[0], ols_flood.params.iloc[1]],
     'std_err': [ols_flood.bse.iloc[0], ols_flood.bse.iloc[1]],
+    'z_stat': [np.nan, np.nan],
     'p_value': [ols_flood.pvalues.iloc[0], ols_flood.pvalues.iloc[1]]
 })
-coef_df.to_csv(OUT_DIR / "flood_only_ols_coefficients.csv", index=False)
 
 # Save SLM coefficients
 # Extract rho and betas robustly (handling different spreg versions)
@@ -629,14 +620,14 @@ if len(std_err_arr) < 3 or len(z_stat_arr) < 3:
 # This ensures we always have the correct number of p-values
 p_value_arr = 2 * (1 - stats.norm.cdf(np.abs(z_stat_arr)))
 
-slm_coef_df = pd.DataFrame({
+coef_slm = pd.DataFrame({
+    'model': ['SLM'] * 3,
     'variable': ['const', flood_var, 'rho'],
     'coefficient': [beta_const, beta_flood_coef, rho_val],
     'std_err': [std_err_arr[0], std_err_arr[1], std_err_arr[2]],
     'z_stat': [z_stat_arr[0], z_stat_arr[1], z_stat_arr[2]],
     'p_value': [p_value_arr[0], p_value_arr[1], p_value_arr[2]]
 })
-slm_coef_df.to_csv(OUT_DIR / "flood_only_slm_coefficients.csv", index=False)
 
 # Save SEM coefficients
 try:
@@ -657,7 +648,8 @@ sem_p_value_arr = 2 * (1 - stats.norm.cdf(np.abs(sem_z_stat_arr)))
 sem_vars = ['const', flood_var]
 if lam_val is not None:
     sem_vars.append('lambda')
-    sem_coef_df = pd.DataFrame({
+    coef_sem = pd.DataFrame({
+        'model': ['SEM'] * 3,
         'variable': sem_vars,
         'coefficient': [sem_betas_arr[0], sem_betas_arr[1], lam_val],
         'std_err': [sem_std_err_arr[0], sem_std_err_arr[1], sem_std_err_arr[2]],
@@ -665,15 +657,19 @@ if lam_val is not None:
         'p_value': [sem_p_value_arr[0], sem_p_value_arr[1], sem_p_value_arr[2]]
     })
 else:
-    sem_coef_df = pd.DataFrame({
+    coef_sem = pd.DataFrame({
+        'model': ['SEM'] * 2,
         'variable': sem_vars,
         'coefficient': [sem_betas_arr[0], sem_betas_arr[1]],
         'std_err': [sem_std_err_arr[0], sem_std_err_arr[1]],
         'z_stat': [sem_z_stat_arr[0], sem_z_stat_arr[1]],
         'p_value': [sem_p_value_arr[0], sem_p_value_arr[1]]
     })
-sem_coef_df.to_csv(OUT_DIR / "flood_only_sem_coefficients.csv", index=False)
-print(f"SEM coefficients saved to: {OUT_DIR / 'flood_only_sem_coefficients.csv'}")
+
+# Save combined coefficients (OLS + SLM + SEM)
+coef_combined = pd.concat([coef_ols, coef_slm, coef_sem], ignore_index=True)
+coef_combined.to_csv(OUT_DIR / "flood_only_coefficients.csv", index=False)
+print(f"Coefficients (OLS + SLM + SEM) saved to: {OUT_DIR / 'flood_only_coefficients.csv'}")
 
 print(f"\n{'='*80}")
 print("All model results saved to:", OUT_DIR)

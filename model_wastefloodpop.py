@@ -78,16 +78,16 @@ NODATA = -9999.0
 # # Optional: Set specific variables to use (set to None to search for best fit)
 # # If set, the script will prioritize these variables but still search if others are None
 # # Priority: user-defined > auto-search
-# YCOL = '3_estimated_outflow_pop_from_2_outflow_max'  # e.g., '3_estimated_outflow_pop_from_2_outflow_max' or None to search
-# FLOOD_VAR = '4_flood_p95'  # e.g., '4_flood_p95' or None to search
-# WASTE_VAR = '4_waste_count'  # e.g., '4_waste_count' or None to search
-# POP_VAR = '3_fb_baseline_median'  # e.g., '3_worldpop' or '3_fb_baseline_median' or None to search
+YCOL = '3_estimated_outflow_pop_from_2_outflow_max'  # e.g., '3_estimated_outflow_pop_from_2_outflow_max' or None to search
+FLOOD_VAR = '4_flood_p95'  # e.g., '4_flood_p95' or None to search
+WASTE_VAR = '4_waste_count'  # e.g., '4_waste_count' or None to search
+POP_VAR = '3_worldpop'  # e.g., '3_worldpop' or '3_fb_baseline_median' or None to search
 # # 3_fb_baseline_median, 3_worldpop
 
-YCOL = None  # e.g., '3_estimated_outflow_pop_from_2_outflow_max' or None to search
-FLOOD_VAR = None  # e.g., '4_flood_p95' or None to search
-WASTE_VAR = None  # e.g., '4_waste_count' or None to search
-POP_VAR = None  # e.g., '3_worldpop' or '3_fb_baseline_median' or None to search
+# YCOL = None  # e.g., '3_estimated_outflow_pop_from_2_outflow_max' or None to search
+# FLOOD_VAR = None  # e.g., '4_flood_p95' or None to search
+# WASTE_VAR = None  # e.g., '4_waste_count' or None to search
+# POP_VAR = None  # e.g., '3_worldpop' or '3_fb_baseline_median' or None to search
 
 
 # -------------------- Helper functions --------------------
@@ -474,11 +474,6 @@ else:
     print(f"\nFound {len(res_df):,} candidate models; showing top {n_show}:")
     print(res_df.head(n_show).to_string(index=False))
     
-    # Save results
-    search_results_file = OUT_DIR / "wastefloodpop_model_search_results.csv"
-    res_df.to_csv(search_results_file, index=False)
-    print(f"\nModel search results saved to: {search_results_file}")
-    
     # Create enhanced CSV with R2, flood variable (name + coefficient + p-value), waste variable (name + coefficient + p-value), population variable (name + coefficient + p-value)
     enhanced_results = []
     for r in results:
@@ -642,16 +637,15 @@ print(f"OLS summary saved to: {ols_summary_file}")
 
 model_gdf['residuals'] = ols.resid
 
-# Save OLS coefficients
-coef_df = pd.DataFrame({
+# OLS coefficients (saved combined with SLM/SEM in spatial branch, or alone in no-spatial branch)
+coef_ols = pd.DataFrame({
+    'model': ['OLS'] * 4,
     'variable': ['const', fcol, wcol, pcol],
     'coefficient': [ols.params.iloc[0], ols.params.iloc[1], ols.params.iloc[2], ols.params.iloc[3]],
     'std_err': [ols.bse.iloc[0], ols.bse.iloc[1], ols.bse.iloc[2], ols.bse.iloc[3]],
+    'z_stat': [np.nan, np.nan, np.nan, np.nan],
     'p_value': [ols.pvalues.iloc[0], ols.pvalues.iloc[1], ols.pvalues.iloc[2], ols.pvalues.iloc[3]]
 })
-ols_coef_file = OUT_DIR / f"ols_coefficients_{FILE_ID}.csv"
-coef_df.to_csv(ols_coef_file, index=False)
-print(f"OLS coefficients saved to: {ols_coef_file}")
 
 # -------------------- STEP 5: Spatial weights & Moran's I --------------------
 print("\nSTEP 5: Building spatial weights (Queen contiguity) and testing residual spatial autocorrelation...")
@@ -666,14 +660,12 @@ if mi is None:
     raise RuntimeError("Moran's I calculation failed.")
 print(f"\nMoran's I on OLS residuals: I={mi.I:.4f}, Expected={mi.EI:.4f}, z={mi.z_norm:.3f}, p_perm={mi.p_sim:.4g}")
 
-# Save Moran's I results
-moran_results = pd.DataFrame({
+# Moran's I for OLS (saved combined with SLM/SEM in spatial branch)
+moran_ols = pd.DataFrame({
+    'model': ['OLS'] * 4,
     'statistic': ['Moran\'s I', 'Expected I', 'z-score', 'p-value'],
     'value': [mi.I, mi.EI, mi.z_norm, mi.p_sim]
 })
-moran_file = OUT_DIR / f"moran_i_results_{FILE_ID}.csv"
-moran_results.to_csv(moran_file, index=False)
-print(f"Moran's I results saved to: {moran_file}")
 
 # -------------------- STEP 6: Spatial Models --------------------
 spatial_threshold_p = 0.05
@@ -713,25 +705,27 @@ if mi.p_sim < spatial_threshold_p:
     if slm_resid is not None:
         mi_slm = safe_moran(pd.Series(slm_resid), w, permutations=N_PERM)
         print(f"\nMoran's I on SLM residuals: I={mi_slm.I:.4f}, p_perm={mi_slm.p_sim:.4g}, z={mi_slm.z_norm:.3f}")
-        # Save SLM residual Moran's I
-        slm_moran_results = pd.DataFrame({
+        moran_slm = pd.DataFrame({
+            'model': ['SLM'] * 4,
             'statistic': ['Moran\'s I', 'Expected I', 'z-score', 'p-value'],
             'value': [mi_slm.I, mi_slm.EI, mi_slm.z_norm, mi_slm.p_sim]
         })
-        slm_moran_file = OUT_DIR / f"slm_moran_i_results_{FILE_ID}.csv"
-        slm_moran_results.to_csv(slm_moran_file, index=False)
-        print(f"SLM residual Moran's I saved to: {slm_moran_file}")
+    else:
+        moran_slm = pd.DataFrame(columns=['model', 'statistic', 'value'])
     if sem_resid is not None:
         mi_sem = safe_moran(pd.Series(sem_resid), w, permutations=N_PERM)
         print(f"Moran's I on SEM residuals: I={mi_sem.I:.4f}, p_perm={mi_sem.p_sim:.4g}, z={mi_sem.z_norm:.3f}")
-        # Save SEM residual Moran's I
-        sem_moran_results = pd.DataFrame({
+        moran_sem = pd.DataFrame({
+            'model': ['SEM'] * 4,
             'statistic': ['Moran\'s I', 'Expected I', 'z-score', 'p-value'],
             'value': [mi_sem.I, mi_sem.EI, mi_sem.z_norm, mi_sem.p_sim]
         })
-        sem_moran_file = OUT_DIR / f"sem_moran_i_results_{FILE_ID}.csv"
-        sem_moran_results.to_csv(sem_moran_file, index=False)
-        print(f"SEM residual Moran's I saved to: {sem_moran_file}")
+    else:
+        moran_sem = pd.DataFrame(columns=['model', 'statistic', 'value'])
+    moran_combined = pd.concat([moran_ols, moran_slm, moran_sem], ignore_index=True)
+    moran_file = OUT_DIR / f"moran_i_results_{FILE_ID}.csv"
+    moran_combined.to_csv(moran_file, index=False)
+    print(f"Moran's I results (OLS + SLM + SEM) saved to: {moran_file}")
     
     # Save SLM/SEM summaries
     slm_summary_file = OUT_DIR / f"slm_summary_{FILE_ID}.txt"
@@ -840,7 +834,8 @@ if mi.p_sim < spatial_threshold_p:
         effects_df.to_csv(impacts_file)
         print(f"⚠️  Manual computation impacts saved to: {impacts_file}")
     
-    # Pseudo R^2
+    # Pseudo R^2 and SLM metrics (pseudo R² + impacts in one file)
+    pseudo_r2 = np.nan
     try:
         y_obs = np.asarray(y).flatten()
         yhat = np.asarray(slm.predy).flatten()
@@ -848,14 +843,20 @@ if mi.p_sim < spatial_threshold_p:
         sst = np.sum((y_obs - y_obs.mean())**2)
         pseudo_r2 = 1 - ssr / sst
         print(f"\nPseudo R^2 (SLM): {pseudo_r2:.4f}")
-        
-        # Save pseudo R^2
-        pseudo_r2_df = pd.DataFrame({'pseudo_r2': [pseudo_r2]})
-        pseudo_r2_file = OUT_DIR / f"slm_pseudo_r2_{FILE_ID}.csv"
-        pseudo_r2_df.to_csv(pseudo_r2_file, index=False)
-        print(f"SLM pseudo R² saved to: {pseudo_r2_file}")
     except Exception:
         print("Could not compute pseudo R^2 for SLM (predictions unavailable).")
+    
+    # Save SLM metrics (pseudo R² + impacts)
+    slm_metrics_rows = [{'metric': 'pseudo_r2', 'value': pseudo_r2}]
+    if impacts_list:
+        for row in impacts_list:
+            v = row['variable']
+            slm_metrics_rows.append({'metric': f'{v}_Direct', 'value': row['Direct']})
+            slm_metrics_rows.append({'metric': f'{v}_Indirect', 'value': row['Indirect']})
+            slm_metrics_rows.append({'metric': f'{v}_Total', 'value': row['Total']})
+    slm_metrics_file = OUT_DIR / f"slm_metrics_{FILE_ID}.csv"
+    pd.DataFrame(slm_metrics_rows).to_csv(slm_metrics_file, index=False)
+    print(f"SLM metrics (pseudo R² + impacts) saved to: {slm_metrics_file}")
     
     # Save SLM coefficients
     # NOTE: For publication, report:
@@ -880,15 +881,13 @@ if mi.p_sim < spatial_threshold_p:
         raise ValueError(f"Expected at least 4 betas and 5 std_err values, got {len(betas_arr)} and {len(std_err_arr)}")
     
     slm_coef_df = pd.DataFrame({
+        'model': ['SLM'] * 5,
         'variable': ['const', fcol, wcol, pcol, 'rho'],
         'coefficient': [betas_arr[0], betas_arr[1], betas_arr[2], betas_arr[3], rho_val],
         'std_err': [std_err_arr[0], std_err_arr[1], std_err_arr[2], std_err_arr[3], std_err_arr[4]],
         'z_stat': [z_stat_arr[0], z_stat_arr[1], z_stat_arr[2], z_stat_arr[3], z_stat_arr[4]],
         'p_value': [p_value_arr[0], p_value_arr[1], p_value_arr[2], p_value_arr[3], p_value_arr[4]]
     })
-    slm_coef_file = OUT_DIR / f"slm_coefficients_{FILE_ID}.csv"
-    slm_coef_df.to_csv(slm_coef_file, index=False)
-    print(f"SLM coefficients saved to: {slm_coef_file}")
     
     # Save SEM coefficients
     try:
@@ -913,6 +912,7 @@ if mi.p_sim < spatial_threshold_p:
         if len(sem_betas_arr) < 4 or len(sem_std_err_arr) < 5:
             raise ValueError(f"Expected at least 4 betas and 5 std_err values for SEM, got {len(sem_betas_arr)} and {len(sem_std_err_arr)}")
         sem_coef_df = pd.DataFrame({
+            'model': ['SEM'] * len(sem_vars),
             'variable': sem_vars,
             'coefficient': [sem_betas_arr[0], sem_betas_arr[1], sem_betas_arr[2], sem_betas_arr[3], lam_val],
             'std_err': [sem_std_err_arr[0], sem_std_err_arr[1], sem_std_err_arr[2], sem_std_err_arr[3], sem_std_err_arr[4]],
@@ -921,15 +921,18 @@ if mi.p_sim < spatial_threshold_p:
         })
     else:
         sem_coef_df = pd.DataFrame({
+            'model': ['SEM'] * len(sem_vars),
             'variable': sem_vars,
             'coefficient': [sem_betas_arr[0], sem_betas_arr[1], sem_betas_arr[2], sem_betas_arr[3]],
             'std_err': [sem_std_err_arr[0], sem_std_err_arr[1], sem_std_err_arr[2], sem_std_err_arr[3]],
             'z_stat': [sem_z_stat_arr[0], sem_z_stat_arr[1], sem_z_stat_arr[2], sem_z_stat_arr[3]],
             'p_value': [sem_p_value_arr[0], sem_p_value_arr[1], sem_p_value_arr[2], sem_p_value_arr[3]]
         })
-    sem_coef_file = OUT_DIR / f"sem_coefficients_{FILE_ID}.csv"
-    sem_coef_df.to_csv(sem_coef_file, index=False)
-    print(f"SEM coefficients saved to: {sem_coef_file}")
+    # Save combined coefficients (OLS + SLM + SEM)
+    coef_combined = pd.concat([coef_ols, slm_coef_df, sem_coef_df], ignore_index=True)
+    coef_file = OUT_DIR / f"coefficients_{FILE_ID}.csv"
+    coef_combined.to_csv(coef_file, index=False)
+    print(f"Coefficients (OLS + SLM + SEM) saved to: {coef_file}")
     
     # Model Comparison
     comp_df = print_model_comparison(ols, slm=slm, sem=sem)
@@ -942,7 +945,12 @@ if mi.p_sim < spatial_threshold_p:
 else:
     print(f"\nNo significant spatial autocorrelation detected (p >= {spatial_threshold_p}). OLS may be adequate with robust SEs.")
     print("Still consider reporting the Moran's I test and the OLS model diagnostics.")
-    
+    moran_file = OUT_DIR / f"moran_i_results_{FILE_ID}.csv"
+    moran_ols.to_csv(moran_file, index=False)
+    print(f"Moran's I results (OLS only) saved to: {moran_file}")
+    coef_file = OUT_DIR / f"coefficients_{FILE_ID}.csv"
+    coef_ols.to_csv(coef_file, index=False)
+    print(f"Coefficients (OLS only) saved to: {coef_file}")
     # Save OLS-only comparison
     comp_df = print_model_comparison(ols)
     comp_file = OUT_DIR / f"model_comparison_{FILE_ID}.csv"

@@ -3,8 +3,8 @@
 Dep. Variable:     3_estimated_outflow_pop_from_2_outflow_max   R-squared:                       0.538
 Model:                                                    OLS   Adj. R-squared:                  0.534
 Method:                                         Least Squares   F-statistic:                     24.06
-Date:                                        Thu, 29 Jan 2026   Prob (F-statistic):           2.84e-10
-Time:                                                16:55:58   Log-Likelihood:                -2563.2
+Date:                                        Wed, 28 Jan 2026   Prob (F-statistic):           2.84e-10
+Time:                                                14:16:09   Log-Likelihood:                -2563.2
 No. Observations:                                         250   AIC:                             5132.
 Df Residuals:                                             247   BIC:                             5143.
 Df Model:                                                   2                                         
