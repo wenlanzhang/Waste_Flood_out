@@ -21,7 +21,6 @@ Flood metric units:
 
 Waste metric units:
 - 4_waste_count: raw count of waste points
-- 4_waste_per_quadkey_area: waste points per 1000 m²
 - 4_waste_per_population: waste points per 1000 people
 - 4_waste_per_svi_count: waste points per 1000 SVI images
 """
@@ -205,20 +204,6 @@ if not SVI_POINTS.exists():
 original_crs = quadkey_gdf.crs
 print(f"  Original CRS: {original_crs}")
 
-# Calculate quadkey area (in square meters) - use UTM for accurate area calculation
-print("\nCalculating quadkey areas...")
-utm_crs = quadkey_gdf.estimate_utm_crs()
-quadkey_gdf_utm = quadkey_gdf.to_crs(utm_crs)
-quadkey_area_m2 = quadkey_gdf_utm.geometry.area
-
-# Reproject back to original CRS and add area
-quadkey_gdf = quadkey_gdf.to_crs(original_crs)
-quadkey_gdf['4_quadkey_area_m2'] = quadkey_area_m2
-print(f"  Quadkey area stats:")
-print(f"    Min: {quadkey_gdf['4_quadkey_area_m2'].min():.2f} m²")
-print(f"    Max: {quadkey_gdf['4_quadkey_area_m2'].max():.2f} m²")
-print(f"    Mean: {quadkey_gdf['4_quadkey_area_m2'].mean():.2f} m²")
-
 # Target CRS for aggregation (use original CRS)
 target_crs = original_crs
 print(f"\n  Target CRS for aggregation: {target_crs}")
@@ -313,22 +298,7 @@ quadkey_gdf['4_waste_count_final'] = np.where(
     quadkey_gdf['4_waste_count'].astype(float)
 )
 
-# 2. Waste per quadkey area (waste_count / quadkey_area_m2) - scaled by 1000 for readability
-# Units: waste points per 1000 m²
-# Only multiply by 1000 if we have valid values (not NaN, not NODATA)
-quadkey_gdf['4_waste_per_quadkey_area'] = np.where(
-    quadkey_gdf['4_svi_count'] == 0,
-    NODATA_VALUE,  # No SVI data → nodata (-9999), don't multiply
-    np.where(
-        (quadkey_gdf['4_quadkey_area_m2'] > 0) & 
-        (quadkey_gdf['4_quadkey_area_m2'].notna()) &
-        (quadkey_gdf['4_waste_count'].notna()),
-        (quadkey_gdf['4_waste_count'] / quadkey_gdf['4_quadkey_area_m2']) * 1000,
-        0.0  # Valid SVI but invalid area → 0, don't multiply
-    )
-)
-
-# 3. Waste per WorldPop population (waste_count / worldpop) - scaled by 1000 for readability
+# 2. Waste per WorldPop population (waste_count / worldpop) - scaled by 1000 for readability
 # Units: waste points per 1000 people
 # Check if worldpop column exists (from script 3, it's 3_worldpop)
 if '3_worldpop' in quadkey_gdf.columns:
@@ -347,7 +317,7 @@ else:
     print("  ⚠️  Warning: '3_worldpop' column not found, skipping waste_per_population")
     quadkey_gdf['4_waste_per_population'] = NODATA_VALUE
 
-# 4. Waste per SVI count (waste_count / svi_count) - scaled by 1000 for readability
+# 3. Waste per SVI count (waste_count / svi_count) - scaled by 1000 for readability
 # Units: waste points per 1000 SVI images
 quadkey_gdf['4_waste_per_svi_count'] = np.where(
     quadkey_gdf['4_svi_count'] == 0,

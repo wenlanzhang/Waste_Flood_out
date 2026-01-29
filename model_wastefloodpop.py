@@ -2,8 +2,8 @@
 """
 model_wastefloodpop.py
 
-Flood + Waste + Population model pipeline:
-  1) Read geopackage with displacement, flood, waste, population vars
+Flood + Waste + Population model pipeline (displacement ~ flood + waste + population):
+  1) Read geopackage with displacement, flood, waste, and population vars
   2) Sanity checks + cleaning
   3) Model search: displacement ~ flood + waste + population (no interaction)
   4) OLS diagnostics (HC3 robust SE) and Moran's I test on residuals
@@ -16,8 +16,7 @@ COLUMN NAMING CONVENTIONS (updated):
   - Script 2 (2y_): 2_outflow_max, 2_displaced_excess_max
   - Script 3 (3scale_): 3_worldpop, 3_estimated_outflow_pop_from_2_outflow_max, 
                        3_estimated_outflow_pop_from_1_outflow_accumulated_hour0, etc.
-  - Script 4 (4flood_): 4_flood_p95, 4_flood_mean, 4_flood_max, 4_waste_count, 4_waste_per_quadkey_area, 
-                        4_waste_per_population, 4_waste_per_svi_count
+  - Script 4 (4flood_): 4_flood_p95, 4_flood_mean, 4_flood_max, 4_waste_count, 4_waste_per_population, 4_waste_per_svi_count
 
 Requirements:
   geopandas, pandas, numpy, statsmodels, libpysal, esda, spreg (pysal/spreg)
@@ -67,8 +66,8 @@ DISP_SUBS = ['1_outflow', '2_outflow', '3_estimated_outflow', '1_outflow_accumul
              '2_displaced_excess', '3_estimated_excess', 'displace', 'displacement', 'outflow', 
              'excess_displacement', 'estimated_outflow', 'estimated_excess']
 FLOOD_SUBS = ['4_flood', '4_flood_p', '4_flood_p95', '4_flood_mean', '4_flood_max', 'flood', 'flood_p', 'flood_p95', 'flood_mean', 'flood_max', 'flood_exposure', 'flood_risk']
-WASTE_SUBS = ['4_waste', '4_waste_count', '4_waste_per', '4_waste_per_quadkey', '4_waste_per_population', 
-              '4_waste_per_svi', 'waste', 'waste_count', 'waste_per', 'waste_per_quadkey', 
+WASTE_SUBS = ['4_waste', '4_waste_count', '4_waste_per', '4_waste_per_population', 
+              '4_waste_per_svi', 'waste', 'waste_count', 'waste_per', 
               'waste_per_population', 'waste_per_svi']
 # POP_SUBS = ['3_worldpop', '3_population_sum', 'population', 'worldpop', 'pop_sum', 'total_population']
 POP_SUBS = ['3_worldpop']
@@ -277,9 +276,9 @@ gdf = replace_nodata_with_nan(gdf, numeric_cols)
 # Find candidate variables using search strings
 disp_candidates = find_candidates(DISP_SUBS, numeric_cols)
 flood_candidates = find_candidates(FLOOD_SUBS, numeric_cols)
-waste_candidates = find_candidates(WASTE_SUBS, numeric_cols)
-pop_candidates = find_candidates(POP_SUBS, numeric_cols)
-fb_baseline_candidates = find_candidates(FB_BASELINE_SUBS, numeric_cols)
+waste_candidates = [c for c in find_candidates(WASTE_SUBS, numeric_cols) if c not in ('4_waste_per_quadkey_area', '4_waste_count_final')]
+pop_candidates = [c for c in find_candidates(POP_SUBS, numeric_cols) if c != '3_worldpop_safe']
+fb_baseline_candidates = [c for c in find_candidates(FB_BASELINE_SUBS, numeric_cols) if c != '3_fb_baseline_safe']
 
 # Combine population and fb_baseline candidates for population search
 # User can specify either worldpop or fb_baseline
@@ -557,7 +556,6 @@ def create_file_identifier(y_var, f_var, w_var, p_var):
         var = var.replace('2_displaced_excess_max', 'excess_max')
         var = var.replace('4_flood_p95', 'flood_p95')
         var = var.replace('4_waste_count', 'waste_count')
-        var = var.replace('4_waste_per_quadkey_area', 'waste_per_area')
         var = var.replace('4_waste_per_population', 'waste_per_pop')
         var = var.replace('4_waste_per_svi_count', 'waste_per_svi')
         var = var.replace('3_worldpop', 'worldpop')

@@ -41,7 +41,6 @@ FLOOD_VAR = "4_flood_p95"
 # Alternative waste measures to test (ordered)
 ALTERNATIVE_WASTE_VARS = [
     ("4_waste_count", "Raw count"),
-    ("4_waste_per_quadkey_area", "Per area"),
     ("4_waste_per_population", "Per population"),
     ("4_waste_per_svi_count", "Per SVI coverage"),
 ]

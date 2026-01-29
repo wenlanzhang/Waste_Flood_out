@@ -197,14 +197,26 @@ These columns come from Step 3 (`3scale_to_worldpop.py`), which scales Facebook 
 - **Calculation:** Sum of WorldPop pixel values within quadkey polygon
 - **Units:** People (WorldPop population estimate)
 - **Source:** WorldPop raster data
-- **Usage:** Population denominator for waste metrics and scaling reference
+- **Usage:** Population denominator for waste metrics, scaling reference, and modelling (use this, not `3_worldpop_safe`)
+
+#### `3_worldpop_safe`
+- **Type:** Float
+- **Description:** Same as `3_worldpop` with zeros replaced by NaN (avoids division by zero in percentage calculations)
+- **Calculation:** `3_worldpop.replace(0, np.nan)` in Step 3
+- **Usage:** Internal use for computing `3_pct_outflow_worldpop_from_*` columns; excluded from multicollinearity and modelling (redundant with `3_worldpop`)
 
 #### `3_fb_baseline_median`
 - **Type:** Float
 - **Description:** Median Facebook baseline population per quadkey (from reference hour rows)
 - **Calculation:** Median of baseline week population values at reference hour
 - **Units:** Facebook population units (people)
-- **Usage:** Denominator for computing scaling ratio
+- **Usage:** Denominator for computing scaling ratio; use this for modelling (not `3_fb_baseline_safe`)
+
+#### `3_fb_baseline_safe`
+- **Type:** Float
+- **Description:** Same as `3_fb_baseline_median` with zeros replaced by NaN (avoids division by zero in percentage calculations)
+- **Calculation:** `3_fb_baseline_median.replace(0, np.nan)` in Step 3
+- **Usage:** Internal use for computing `3_pct_outflow_fb_from_*` columns; excluded from multicollinearity and modelling (redundant with `3_fb_baseline_median`)
 
 #### `3_scaling_ratio`
 - **Type:** Float
@@ -337,7 +349,7 @@ These columns come from Step 4 (`4flood_waste.py`), computed by spatially aggreg
 - **Calculation:** Spatial join (points within polygon) to count waste points
 - **Source:** Waste point GeoPackage (`aoi_waste.gpkg`)
 - **Units:** Count (number of waste points)
-- **Usage:** Primary waste metric
+- **Usage:** Primary waste metric; use this for modelling (not `4_waste_count_final`)
 - **Note:** Set to 0 where no waste points found (not nodata)
 
 #### `4_waste_count_final`
@@ -347,19 +359,7 @@ These columns come from Step 4 (`4flood_waste.py`), computed by spatially aggreg
   - If `4_svi_count == 0`: set to `-9999` (nodata)
   - Otherwise: same as `4_waste_count`
 - **Units:** Count (or -9999 for nodata)
-- **Usage:** Data quality indicator (distinguishes "no waste" from "no SVI coverage")
-
-#### `4_waste_per_quadkey_area`
-- **Type:** Float
-- **Description:** **Waste points per 1000 m²** (density metric)
-- **Calculation:** `(4_waste_count / 4_quadkey_area_m2) × 1000`
-- **Units:** Waste points per 1000 m²
-- **Logic:**
-  - If `4_svi_count == 0`: set to `-9999` (nodata)
-  - If `4_quadkey_area_m2 > 0`: calculate density
-  - Otherwise: set to `0.0`
-- **Usage:** Normalized waste metric accounting for quadkey size
-- **Interpretation:** Higher values indicate more waste per unit area
+- **Usage:** Data quality indicator (distinguishes "no waste" from "no SVI coverage"); excluded from multicollinearity and modelling (redundant with `4_waste_count`)
 
 #### `4_waste_per_population`
 - **Type:** Float
@@ -395,15 +395,6 @@ These columns come from Step 4 (`4flood_waste.py`), computed by spatially aggreg
   - Denominator for `4_waste_per_svi_count`
   - Data quality indicator (no SVI = no waste observation capability)
 - **Interpretation:** Higher values indicate better street view coverage
-
-#### `4_quadkey_area_m2`
-- **Type:** Float
-- **Description:** **Area of quadkey polygon** in square meters
-- **Calculation:** Polygon area computed in UTM CRS for accuracy
-- **Units:** Square meters (m²)
-- **Usage:** 
-  - Denominator for `4_waste_per_quadkey_area`
-  - Spatial reference metric
 
 ---
 

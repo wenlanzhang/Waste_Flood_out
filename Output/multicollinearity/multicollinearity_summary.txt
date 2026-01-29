@@ -1,0 +1,53 @@
+Multicollinearity diagnostics
+Data: 4_flood_waste_metrics_quadkey.gpkg
+Predictors: 1_outflow_accumulated_hour0, 1_outflow_max_hour0, 2_change_cv, 2_change_iqr, 2_change_max, 2_change_mean, 2_change_min, 2_change_range, 2_change_std, 2_displaced_excess_max, 2_n_crisis_rows, 2_outflow_max, 3_estimated_excess_displacement_pop, 3_estimated_outflow_pop_from_1_outflow_accumulated_hour0, 3_estimated_outflow_pop_from_1_outflow_max_hour0, 3_estimated_outflow_pop_from_2_outflow_max, 3_fb_baseline_median, 3_pct_outflow_fb_from_1_outflow_accumulated_hour0, 3_pct_outflow_fb_from_1_outflow_max_hour0, 3_pct_outflow_fb_from_2_outflow_max, 3_pct_outflow_worldpop_from_1_outflow_accumulated_hour0, 3_pct_outflow_worldpop_from_1_outflow_max_hour0, 3_pct_outflow_worldpop_from_2_outflow_max, 3_worldpop, 4_flood_max, 4_flood_mean, 4_flood_p95, 4_svi_count, 4_waste_count, 4_waste_per_population, 4_waste_per_svi_count
+N (complete cases): 207
+
+VIF (Variance Inflation Factor):
+  VIF > 10: severe multicollinearity; consider dropping or combining predictors.
+  VIF > 5:  moderate multicollinearity (conservative threshold).
+
+                                                variable          VIF  Tolerance
+                             1_outflow_accumulated_hour0  1983.865617   0.000504
+                                     1_outflow_max_hour0  2135.298844   0.000468
+                                             2_change_cv     1.050980   0.951493
+                                            2_change_iqr     4.658984   0.214639
+                                            2_change_max          inf        NaN
+                                           2_change_mean    29.620746   0.033760
+                                            2_change_min          inf        NaN
+                                          2_change_range          inf        NaN
+                                            2_change_std 28906.184291   0.000035
+                                  2_displaced_excess_max   194.825455   0.005133
+                                         2_n_crisis_rows     3.163261   0.316129
+                                           2_outflow_max   276.656157   0.003615
+                     3_estimated_excess_displacement_pop    20.497934   0.048785
+3_estimated_outflow_pop_from_1_outflow_accumulated_hour0   191.380228   0.005225
+        3_estimated_outflow_pop_from_1_outflow_max_hour0   203.867336   0.004905
+              3_estimated_outflow_pop_from_2_outflow_max    21.768038   0.045939
+                                    3_fb_baseline_median    29.534095   0.033859
+       3_pct_outflow_fb_from_1_outflow_accumulated_hour0          inf        NaN
+               3_pct_outflow_fb_from_1_outflow_max_hour0          inf        NaN
+                     3_pct_outflow_fb_from_2_outflow_max          inf        NaN
+ 3_pct_outflow_worldpop_from_1_outflow_accumulated_hour0          inf        NaN
+         3_pct_outflow_worldpop_from_1_outflow_max_hour0          inf        NaN
+               3_pct_outflow_worldpop_from_2_outflow_max          inf        NaN
+                                              3_worldpop    12.917618   0.077414
+                                             4_flood_max     2.400370   0.416603
+                                            4_flood_mean     4.960094   0.201609
+                                             4_flood_p95     6.459097   0.154820
+                                             4_svi_count     2.986204   0.334873
+                                           4_waste_count    13.323080   0.075058
+                                  4_waste_per_population     1.455325   0.687132
+                                   4_waste_per_svi_count     9.861608   0.101403
+
+Condition number (scaled X): 46179391225103.27
+  > 30:  ill-conditioning; > 100: severe.
+
+Interpretation:
+  22 predictor(s) with VIF > 10 (severe): 1_outflow_accumulated_hour0, 1_outflow_max_hour0, 2_change_max, 2_change_mean, 2_change_min, 2_change_range, 2_change_std, 2_displaced_excess_max, 2_outflow_max, 3_estimated_excess_displacement_pop, 3_estimated_outflow_pop_from_1_outflow_accumulated_hour0, 3_estimated_outflow_pop_from_1_outflow_max_hour0, 3_estimated_outflow_pop_from_2_outflow_max, 3_fb_baseline_median, 3_pct_outflow_fb_from_1_outflow_accumulated_hour0, 3_pct_outflow_fb_from_1_outflow_max_hour0, 3_pct_outflow_fb_from_2_outflow_max, 3_pct_outflow_worldpop_from_1_outflow_accumulated_hour0, 3_pct_outflow_worldpop_from_1_outflow_max_hour0, 3_pct_outflow_worldpop_from_2_outflow_max, 3_worldpop, 4_waste_count
+  Recommendation: do not include all of these in the same model; use one per construct (e.g. one flood, one waste, one population).
+  2 predictor(s) with 5 < VIF <= 10 (moderate): 4_flood_p95, 4_waste_per_svi_count
+  Condition number 46179391225103.3 indicates severe ill-conditioning; avoid using all predictors jointly.
+
+Outputs: correlation_matrix.csv, vif_tolerance.csv, condition_number.csv
+Figures: Figure/multicollinearity/ (correlation heatmap, VIF bar chart, two-panel).
