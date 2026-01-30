@@ -1,0 +1,1 @@
+Multicollinearity: only 1 predictor(s) (4_flood_p95). VIF/figures require ≥2 predictors.

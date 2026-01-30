@@ -46,6 +46,8 @@ except Exception:
     except Exception as e:
         raise ImportError("spreg not found. Install with: conda/pip install pysal spreg. Error: " + str(e))
 
+from multicollinearity_utils import run_multicollinearity_diagnostics
+
 
 # -------------------- USER PARAMETERS --------------------
 GPKG_PATH = Path("/Users/wenlanzhang/PycharmProjects/Waste_Flood_out/Data/4/4_flood_waste_metrics_quadkey.gpkg")
@@ -72,9 +74,9 @@ WASTE_SUBS = ['4_waste', '4_waste_count', '4_waste_per', '4_waste_per_population
 
 NODATA = -9999.0
 
-# Optional: Set specific variables to use (set to None to search for best fit)
-# If set, the script will only use these variables and skip the model search
-YCOL = '3_estimated_outflow_pop_from_2_outflow_max'  # e.g., '3_estimated_outflow_pop_from_2_outflow_max' or None to search
+# Optional: Set specific variables to use
+# YCOL = '3_estimated_outflow_pop_from_2_outflow_max'  # e.g., '3_estimated_outflow_pop_from_2_outflow_max' or None to search
+YCOL = '2_outflow_max'
 FLOOD_VAR = '4_flood_p95'  # e.g., '4_flood_p95' or None to search
 WASTE_VAR = '4_waste_count'  # e.g., '4_waste_count' or None to search
 
@@ -469,6 +471,12 @@ else:
     print(f"  AIC:                {best_model_info['aic']:.2f}")
     print(f"  BIC:                {best_model_info['bic']:.2f}")
     print(f"{'='*80}")
+
+# -------------------- Multicollinearity diagnostics (figure folder) --------------------
+# Predictors: selected flood + waste if fixed, else all flood + waste candidates
+pred_cols_wf = [fcol, wcol] if (FLOOD_VAR is not None and WASTE_VAR is not None) else (flood_candidates + waste_candidates)
+print("\nMulticollinearity diagnostics (predictors for this step)...")
+run_multicollinearity_diagnostics(pred_cols_wf, df_clean, FIGURE_DIR, OUT_DIR)
 
 # -------------------- STEP 4: VIF Analysis and OLS --------------------
 print("\nSTEP 4: Running VIF analysis and OLS diagnostics...")

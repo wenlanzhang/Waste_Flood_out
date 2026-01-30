@@ -47,6 +47,8 @@ except Exception:
     except Exception as e:
         raise ImportError("spreg not found. Install with: conda/pip install pysal spreg. Error: " + str(e))
 
+from multicollinearity_utils import run_multicollinearity_diagnostics
+
 
 # -------------------- USER PARAMETERS --------------------
 GPKG_PATH = Path("/Users/wenlanzhang/PycharmProjects/Waste_Flood_out/Data/4/4_flood_waste_metrics_quadkey.gpkg")
@@ -72,7 +74,8 @@ FLOOD_SUBS = ['4_flood', '4_flood_p', '4_flood_p95', '4_flood_mean', '4_flood_ma
 NODATA = -9999.0
 
 # Optional: Set specific variables to use
-YCOL = '3_estimated_outflow_pop_from_2_outflow_max'  # e.g., '3_estimated_outflow_pop_from_2_outflow_max' or None to search
+# YCOL = '3_estimated_outflow_pop_from_2_outflow_max' 
+YCOL = '2_outflow_max'
 FLOOD_VAR = '4_flood_p95'  # e.g., '4_flood_p95' or None to search
 
 # YCOL = None
@@ -365,6 +368,12 @@ else:
     print(f"  AIC:                {best_flood['aic']:.2f}")
     print(f"  BIC:                {best_flood['bic']:.2f}")
     print(f"{'='*80}")
+
+# -------------------- Multicollinearity diagnostics (figure folder) --------------------
+# Predictors: selected flood var if fixed, else all flood candidates
+pred_cols_flood = [flood_var] if FLOOD_VAR is not None else flood_candidates
+print("\nMulticollinearity diagnostics (predictors for this step)...")
+run_multicollinearity_diagnostics(pred_cols_flood, df_clean, FIGURE_DIR, OUT_DIR)
 
 # -------------------- Flood-only OLS --------------------
 

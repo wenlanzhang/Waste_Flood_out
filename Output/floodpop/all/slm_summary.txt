@@ -1,0 +1,31 @@
+REGRESSION RESULTS
+------------------
+
+SUMMARY OF OUTPUT: MAXIMUM LIKELIHOOD SPATIAL LAG (METHOD = FULL)
+-----------------------------------------------------------------
+Data set            :     unknown
+Weights matrix      :           w
+Dependent Variable  :2_outflow_max                Number of Observations:         250
+Mean dependent var  :    199.7875                Number of Variables   :           4
+S.D. dependent var  :    524.2562                Degrees of Freedom    :         246
+Pseudo R-squared    :      0.7557
+Spatial Pseudo R-squared:  0.7403
+Log likelihood      :  -1743.8272
+Sigma-square ML     :  66870.6853                Akaike info criterion :    3495.654
+S.E of regression   :    258.5937                Schwarz criterion     :    3509.740
+
+------------------------------------------------------------------------------------
+            Variable     Coefficient       Std.Error     z-Statistic     Probability
+------------------------------------------------------------------------------------
+            CONSTANT      -106.53966        29.45613        -3.61689         0.00030
+         4_flood_max         5.36526         6.45193         0.83158         0.40565
+3_fb_baseline_median         0.26956         0.02212        12.18684         0.00000
+     W_2_outflow_max         0.11969         0.08354         1.43276         0.15193
+------------------------------------------------------------------------------------
+
+SPATIAL LAG MODEL IMPACTS
+Impacts computed using the 'simple' method.
+            Variable         Direct        Indirect          Total
+         4_flood_max         5.3653          0.7295          6.0947
+3_fb_baseline_median         0.2696          0.0367          0.3062
+================================ END OF REPORT =====================================

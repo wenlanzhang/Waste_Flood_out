@@ -1,0 +1,8 @@
+metric,value
+pseudo_r2,0.7557192002457009
+4_flood_max_Direct,5.3653
+4_flood_max_Indirect,0.7295
+4_flood_max_Total,6.0947
+3_fb_baseline_median_Direct,0.2696
+3_fb_baseline_median_Indirect,0.0367
+3_fb_baseline_median_Total,0.3062

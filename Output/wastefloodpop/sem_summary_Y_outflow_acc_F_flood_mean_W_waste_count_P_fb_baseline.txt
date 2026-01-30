@@ -1,0 +1,33 @@
+Spatial Error Model (SEM) Summary
+================================================================================
+Dependent variable: 1_outflow_accumulated_hour0
+Flood variable:     4_flood_mean
+Waste variable:     4_waste_count
+Population variable: 3_fb_baseline_median
+================================================================================
+
+REGRESSION RESULTS
+------------------
+
+SUMMARY OF OUTPUT: ML SPATIAL ERROR (METHOD = full)
+---------------------------------------------------
+Data set            :     unknown
+Weights matrix      :           w
+Dependent Variable  :1_outflow_accumulated_hour0                Number of Observations:         250
+Mean dependent var  :    161.8108                Number of Variables   :           4
+S.D. dependent var  :    575.5497                Degrees of Freedom    :         246
+Pseudo R-squared    :      0.8359
+Log likelihood      :  -1700.1690
+Sigma-square ML     :  44732.9739                Akaike info criterion :    3408.338
+S.E of regression   :    211.5017                Schwarz criterion     :    3422.424
+
+------------------------------------------------------------------------------------
+            Variable     Coefficient       Std.Error     z-Statistic     Probability
+------------------------------------------------------------------------------------
+            CONSTANT      -166.19902        35.07890        -4.73786         0.00000
+        4_flood_mean        94.69044        85.65546         1.10548         0.26895
+       4_waste_count        -6.59132         0.58461       -11.27475         0.00000
+3_fb_baseline_median         0.43032         0.01646        26.15142         0.00000
+              lambda         0.54284         0.07571         7.16999         0.00000
+------------------------------------------------------------------------------------
+================================ END OF REPORT =====================================

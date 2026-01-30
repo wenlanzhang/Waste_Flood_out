@@ -46,6 +46,8 @@ except Exception:
     except Exception as e:
         raise ImportError("spreg not found. Install with: conda/pip install pysal spreg. Error: " + str(e))
 
+from multicollinearity_utils import run_multicollinearity_diagnostics
+
 
 # -------------------- USER PARAMETERS --------------------
 GPKG_PATH = Path("/Users/wenlanzhang/PycharmProjects/Waste_Flood_out/Data/4/4_flood_waste_metrics_quadkey.gpkg")
@@ -75,20 +77,17 @@ FB_BASELINE_SUBS = ['3_fb_baseline_median', '3_fb_baseline', 'fb_baseline', 'fac
 
 NODATA = -9999.0
 
-# # Optional: Set specific variables to use (set to None to search for best fit)
-# # If set, the script will prioritize these variables but still search if others are None
-# # Priority: user-defined > auto-search
-YCOL = '3_estimated_outflow_pop_from_2_outflow_max'  # e.g., '3_estimated_outflow_pop_from_2_outflow_max' or None to search
+# Optional: Set specific variables to use (set to None to search for best fit)
+# Priority: user-defined > auto-search
+YCOL = '2_outflow_max' # e.g., '3_estimated_outflow_pop_from_2_outflow_max' or None to search
 FLOOD_VAR = '4_flood_p95'  # e.g., '4_flood_p95' or None to search
 WASTE_VAR = '4_waste_count'  # e.g., '4_waste_count' or None to search
 POP_VAR = '3_worldpop'  # e.g., '3_worldpop' or '3_fb_baseline_median' or None to search
-# # 3_fb_baseline_median, 3_worldpop
 
 # YCOL = None  # e.g., '3_estimated_outflow_pop_from_2_outflow_max' or None to search
 # FLOOD_VAR = None  # e.g., '4_flood_p95' or None to search
 # WASTE_VAR = None  # e.g., '4_waste_count' or None to search
 # POP_VAR = None  # e.g., '3_worldpop' or '3_fb_baseline_median' or None to search
-
 
 # -------------------- Helper functions --------------------
 def find_candidates(subs, cols):
@@ -578,6 +577,13 @@ FILE_ID = create_file_identifier(ycol, fcol, wcol, pcol)
 print(f"\n{'='*80}")
 print(f"FILE IDENTIFIER: {FILE_ID}")
 print(f"{'='*80}")
+
+# -------------------- Multicollinearity diagnostics (figure folder) --------------------
+# Predictors: selected flood + waste + pop if fixed, else all flood + waste + pop candidates
+all_vars_set = (YCOL is not None and FLOOD_VAR is not None and WASTE_VAR is not None and POP_VAR is not None)
+pred_cols_wfp = [fcol, wcol, pcol] if all_vars_set else (flood_candidates + waste_candidates + all_pop_candidates)
+print("\nMulticollinearity diagnostics (predictors for this step)...")
+run_multicollinearity_diagnostics(pred_cols_wfp, df_clean, FIGURE_DIR, OUT_DIR, file_id=FILE_ID)
 
 # -------------------- STEP 4: VIF Analysis and OLS --------------------
 print("\nSTEP 4: Running VIF analysis and OLS diagnostics...")

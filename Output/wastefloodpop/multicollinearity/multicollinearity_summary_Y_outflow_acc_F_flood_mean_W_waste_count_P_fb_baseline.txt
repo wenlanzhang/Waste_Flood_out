@@ -1,0 +1,22 @@
+Multicollinearity diagnostics (model step)
+Predictors: 4_flood_max, 4_flood_mean, 4_flood_p95, 4_waste_count, 4_waste_per_population, 4_waste_per_svi_count, 3_worldpop, 3_fb_baseline_median
+N (complete cases): 224
+
+VIF (Variance Inflation Factor):
+  VIF > 10: severe; VIF > 5: moderate (conservative).
+
+              variable      VIF  Tolerance
+           4_flood_max 2.063911   0.484517
+          4_flood_mean 4.444842   0.224980
+           4_flood_p95 5.517410   0.181244
+         4_waste_count 8.767111   0.114063
+4_waste_per_population 1.334365   0.749420
+ 4_waste_per_svi_count 8.348839   0.119777
+            3_worldpop 3.705583   0.269863
+  3_fb_baseline_median 1.751259   0.571018
+
+Condition number (scaled X): 7.09
+  > 30: ill-conditioning; > 100: severe.
+
+Interpretation:
+  3 predictor(s) with 5 < VIF <= 10 (moderate): 4_flood_p95, 4_waste_count, 4_waste_per_svi_count

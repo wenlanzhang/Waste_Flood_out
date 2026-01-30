@@ -1,0 +1,8 @@
+metric,value
+pseudo_r2,0.6582194742311365
+4_flood_p95_Direct,-14.8752
+4_flood_p95_Indirect,-6.5098
+4_flood_p95_Total,-21.385
+3_worldpop_Direct,0.1249
+3_worldpop_Indirect,0.0547
+3_worldpop_Total,0.1796

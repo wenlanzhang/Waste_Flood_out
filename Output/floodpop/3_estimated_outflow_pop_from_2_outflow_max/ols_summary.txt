@@ -1,0 +1,28 @@
+                                        OLS Regression Results                                        
+======================================================================================================
+Dep. Variable:     3_estimated_outflow_pop_from_2_outflow_max   R-squared:                       0.629
+Model:                                                    OLS   Adj. R-squared:                  0.626
+Method:                                         Least Squares   F-statistic:                     11.66
+Date:                                        Fri, 30 Jan 2026   Prob (F-statistic):           1.45e-05
+Time:                                                13:49:31   Log-Likelihood:                -2535.6
+No. Observations:                                         250   AIC:                             5077.
+Df Residuals:                                             247   BIC:                             5088.
+Df Model:                                                   2                                         
+Covariance Type:                                          HC3                                         
+===============================================================================
+                  coef    std err          z      P>|z|      [0.025      0.975]
+-------------------------------------------------------------------------------
+const         607.8663    733.176      0.829      0.407    -829.133    2044.865
+4_flood_p95   -31.2246    417.525     -0.075      0.940    -849.559     787.110
+3_worldpop      0.1527      0.033      4.565      0.000       0.087       0.218
+==============================================================================
+Omnibus:                      185.801   Durbin-Watson:                   1.523
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):             7050.483
+Skew:                          -2.398   Prob(JB):                         0.00
+Kurtosis:                      28.570   Cond. No.                     8.96e+04
+==============================================================================
+
+Notes:
+[1] Standard Errors are heteroscedasticity robust (HC3)
+[2] The condition number is large, 8.96e+04. This might indicate that there are
+strong multicollinearity or other numerical problems.

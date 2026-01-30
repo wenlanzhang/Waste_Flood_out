@@ -1,0 +1,24 @@
+REGRESSION RESULTS
+------------------
+
+SUMMARY OF OUTPUT: ML SPATIAL ERROR (METHOD = full)
+---------------------------------------------------
+Data set            :     unknown
+Weights matrix      :           w
+Dependent Variable  :2_outflow_max                Number of Observations:         250
+Mean dependent var  :    199.7875                Number of Variables   :           3
+S.D. dependent var  :    524.2562                Degrees of Freedom    :         247
+Pseudo R-squared    :      0.7536
+Log likelihood      :  -1712.6860
+Sigma-square ML     :  45343.1247                Akaike info criterion :    3431.372
+S.E of regression   :    212.9393                Schwarz criterion     :    3441.936
+
+------------------------------------------------------------------------------------
+            Variable     Coefficient       Std.Error     z-Statistic     Probability
+------------------------------------------------------------------------------------
+            CONSTANT      -176.78266        70.17731        -2.51909         0.01177
+         4_flood_max         5.04845         6.53940         0.77200         0.44011
+3_fb_baseline_median         0.38272         0.01975        19.37568         0.00000
+              lambda         0.78811         0.04621        17.05323         0.00000
+------------------------------------------------------------------------------------
+================================ END OF REPORT =====================================

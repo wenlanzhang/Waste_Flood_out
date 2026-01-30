@@ -1,0 +1,2 @@
+y,flood_var,flood_coefficient,flood_p_value,waste_var,waste_coefficient,waste_p_value,population_var,population_coefficient,population_p_value,r2,adjr2,nobs,aic,bic
+3_estimated_outflow_pop_from_2_outflow_max,4_flood_p95,-49.839263076603515,0.9093109748590888,4_waste_count,72.47925552149457,0.15959785109721203,3_worldpop,0.11314790447018515,0.053012048144814736,0.649500230968594,0.6452258435413818,250,5065.221750368584,5079.307594040033

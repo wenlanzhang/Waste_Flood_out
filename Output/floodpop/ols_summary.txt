@@ -1,0 +1,28 @@
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:          2_outflow_max   R-squared:                       0.095
+Model:                            OLS   Adj. R-squared:                  0.087
+Method:                 Least Squares   F-statistic:                     8.498
+Date:                Fri, 30 Jan 2026   Prob (F-statistic):           0.000270
+Time:                        15:59:26   Log-Likelihood:                -1907.3
+No. Observations:                 250   AIC:                             3821.
+Df Residuals:                     247   BIC:                             3831.
+Df Model:                           2                                         
+Covariance Type:                  HC3                                         
+===============================================================================
+                  coef    std err          z      P>|z|      [0.025      0.975]
+-------------------------------------------------------------------------------
+const         123.7622     28.223      4.385      0.000      68.447     179.078
+4_flood_p95    -3.1378     14.212     -0.221      0.825     -30.994      24.718
+3_worldpop      0.0031      0.001      4.033      0.000       0.002       0.005
+==============================================================================
+Omnibus:                      387.916   Durbin-Watson:                   1.464
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            65665.489
+Skew:                           7.633   Prob(JB):                         0.00
+Kurtosis:                      80.916   Cond. No.                     8.96e+04
+==============================================================================
+
+Notes:
+[1] Standard Errors are heteroscedasticity robust (HC3)
+[2] The condition number is large, 8.96e+04. This might indicate that there are
+strong multicollinearity or other numerical problems.

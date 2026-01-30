@@ -1,0 +1,7 @@
+Variable,Flood + Waste,Flood + Population,Flood + Waste + Population,Flood + Waste,Flood + Population,Flood + Waste + Population
+Model,OLS,OLS,OLS,SLM,SLM,SLM
+Flood exposure,0,0,0,0,0,0
+Waste accumulation,+***,—,+*,0,—,0
+Baseline population,—,+***,0,—,0,0
+Adj. R²,0.117,0.087,0.114,0.618,0.617,0.628
+Moran's I (resid.),**,**,**,**,**,**

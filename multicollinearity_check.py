@@ -2,7 +2,14 @@
 """
 multicollinearity_check.py
 
-Publication-ready multicollinearity diagnostics for predictors from 4flood_waste.py output.
+Standalone multicollinearity check (optional). The same diagnostics are now integrated
+into each modelling step and saved to that model's Figure folder:
+  - model_flood       -> Figure/flood/
+  - model_wasteflood  -> Figure/wasteflood/
+  - model_floodpop    -> Figure/floodpop/
+  - model_wastefloodpop -> Figure/wastefloodpop/
+
+This script remains for ad-hoc runs with custom predictor sets.
 
 Uses: Data/4/4_flood_waste_metrics_quadkey.gpkg
 

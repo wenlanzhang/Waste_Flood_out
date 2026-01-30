@@ -5,25 +5,25 @@ SUMMARY OF OUTPUT: MAXIMUM LIKELIHOOD SPATIAL LAG (METHOD = FULL)
 -----------------------------------------------------------------
 Data set            :     unknown
 Weights matrix      :     w_flood
-Dependent Variable  :3_estimated_outflow_pop_from_2_outflow_max                Number of Observations:         250
-Mean dependent var  :   4507.9230                Number of Variables   :           3
-S.D. dependent var  :  10114.3106                Degrees of Freedom    :         247
-Pseudo R-squared    :      0.4927
-Spatial Pseudo R-squared:  0.0030
-Log likelihood      :  -2601.3032
-Sigma-square ML     :55971965.7535                Akaike info criterion :    5208.606
-S.E of regression   :   7481.4414                Schwarz criterion     :    5219.171
+Dependent Variable  :2_outflow_max                Number of Observations:         250
+Mean dependent var  :    199.7875                Number of Variables   :           3
+S.D. dependent var  :    524.2562                Degrees of Freedom    :         247
+Pseudo R-squared    :      0.6725
+Spatial Pseudo R-squared:  0.0015
+Log likelihood      :  -1824.9587
+Sigma-square ML     : 104493.2188                Akaike info criterion :    3655.917
+S.E of regression   :    323.2541                Schwarz criterion     :    3666.482
 
 ------------------------------------------------------------------------------------
             Variable     Coefficient       Std.Error     z-Statistic     Probability
 ------------------------------------------------------------------------------------
-            CONSTANT       788.19775       655.48374         1.20247         0.22918
-         4_flood_p95       184.99681       432.46227         0.42778         0.66881
-W_3_estimated_outflow_pop_from_2_outflow_max         0.76926         0.04889        15.73299         0.00000
+            CONSTANT        20.30347        27.61365         0.73527         0.46218
+         4_flood_p95         0.83273        18.68178         0.04457         0.96445
+     W_2_outflow_max         0.88677         0.03021        29.35751         0.00000
 ------------------------------------------------------------------------------------
 
 SPATIAL LAG MODEL IMPACTS
 Impacts computed using the 'simple' method.
             Variable         Direct        Indirect          Total
-         4_flood_p95       184.9968        616.7468        801.7436
+         4_flood_p95         0.8327          6.5214          7.3542
 ================================ END OF REPORT =====================================

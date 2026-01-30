@@ -35,7 +35,8 @@ OUT_DIR = Path("/Users/wenlanzhang/PycharmProjects/Waste_Flood_out/Output/summar
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Fixed variables
-DVAR = "3_estimated_outflow_pop_from_2_outflow_max"
+# DVAR = "3_estimated_outflow_pop_from_2_outflow_max"
+DVAR = "2_outflow_max"
 FLOOD_VAR = "4_flood_p95"
 
 # Alternative waste measures to test (ordered)

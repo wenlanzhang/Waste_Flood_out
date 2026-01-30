@@ -1,0 +1,10 @@
+Dependent variable,Waste coef (OLS),Flood coef (OLS),Adj. R²,Moran's I (OLS resid.)
+% outflow (FB),+**,0,0.0135,0.2562**
+% outflow (FB) from accumulated,0,0,-0.0080,0.5737**
+% outflow (FB) from max,0,0,-0.0084,0.5464**
+% outflow (WorldPop),+***,0,0.0234,0.2971**
+% outflow (WorldPop) from accumulated,0,0,-0.0073,0.5638**
+% outflow (WorldPop) from max,0,0,-0.0067,0.5331**
+1_outflow_accumulated_hour0,+*,0,0.0343,0.5376**
+1_outflow_max_hour0,+*,0,0.0270,0.5255**
+2_outflow_max (FB users),+***,0,0.1166,0.4452**

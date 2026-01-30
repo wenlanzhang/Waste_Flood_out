@@ -1,5 +1,5 @@
 metric,value
-pseudo_r2,0.4506632594458343
-Direct,184.9968
-Indirect,616.7468
-Total,801.7436
+pseudo_r2,0.6182828556638778
+Direct,0.8327
+Indirect,6.5214
+Total,7.3542

@@ -1,0 +1,41 @@
+Spatial Lag Model (SLM) Summary
+================================================================================
+Dependent variable: 2_outflow_max
+Flood variable:     4_flood_p95
+Waste variable:     4_waste_count
+Population variable: 3_worldpop
+================================================================================
+
+REGRESSION RESULTS
+------------------
+
+SUMMARY OF OUTPUT: MAXIMUM LIKELIHOOD SPATIAL LAG (METHOD = FULL)
+-----------------------------------------------------------------
+Data set            :     unknown
+Weights matrix      :           w
+Dependent Variable  :2_outflow_max                Number of Observations:         250
+Mean dependent var  :    199.7875                Number of Variables   :           5
+S.D. dependent var  :    524.2562                Degrees of Freedom    :         245
+Pseudo R-squared    :      0.6707
+Spatial Pseudo R-squared:  0.0604
+Log likelihood      :  -1820.9985
+Sigma-square ML     : 101847.1112                Akaike info criterion :    3651.997
+S.E of regression   :    319.1349                Schwarz criterion     :    3669.604
+
+------------------------------------------------------------------------------------
+            Variable     Coefficient       Std.Error     z-Statistic     Probability
+------------------------------------------------------------------------------------
+            CONSTANT        14.17847        28.63712         0.49511         0.62052
+         4_flood_p95        -0.23108        18.46566        -0.01251         0.99002
+       4_waste_count         2.87324         1.02527         2.80244         0.00507
+          3_worldpop        -0.00140         0.00068        -2.07139         0.03832
+     W_2_outflow_max         0.87914         0.03106        28.30281         0.00000
+------------------------------------------------------------------------------------
+
+SPATIAL LAG MODEL IMPACTS
+Impacts computed using the 'simple' method.
+            Variable         Direct        Indirect          Total
+         4_flood_p95        -0.2311         -1.6809         -1.9120
+       4_waste_count         2.8732         20.8999         23.7732
+          3_worldpop        -0.0014         -0.0102         -0.0116
+================================ END OF REPORT =====================================
