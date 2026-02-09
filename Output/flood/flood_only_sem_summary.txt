@@ -5,19 +5,19 @@ SUMMARY OF OUTPUT: ML SPATIAL ERROR (METHOD = full)
 ---------------------------------------------------
 Data set            :     unknown
 Weights matrix      :     w_flood
-Dependent Variable  :2_outflow_max                Number of Observations:         250
-Mean dependent var  :    199.7875                Number of Variables   :           2
-S.D. dependent var  :    524.2562                Degrees of Freedom    :         248
-Pseudo R-squared    :      0.0000
-Log likelihood      :  -1824.9560
-Sigma-square ML     : 104487.6522                Akaike info criterion :    3653.912
-S.E of regression   :    323.2455                Schwarz criterion     :    3660.955
+Dependent Variable  :2_outflow_max                Number of Observations:         230
+Mean dependent var  :    217.1477                Number of Variables   :           2
+S.D. dependent var  :    543.1986                Degrees of Freedom    :         228
+Pseudo R-squared    :      0.0007
+Log likelihood      :  -1689.6842
+Sigma-square ML     : 114930.2920                Akaike info criterion :    3383.368
+S.E of regression   :    339.0137                Schwarz criterion     :    3390.245
 
 ------------------------------------------------------------------------------------
             Variable     Coefficient       Std.Error     z-Statistic     Probability
 ------------------------------------------------------------------------------------
-            CONSTANT       184.17978       182.23551         1.01067         0.31217
-         4_flood_p95         1.94547        22.60581         0.08606         0.93142
-              lambda         0.88681         0.03020        29.36570         0.00000
+            CONSTANT       191.36520       183.72349         1.04159         0.29760
+         4_flood_p95         1.19712        25.50550         0.04694         0.96256
+              lambda         0.87720         0.03242        27.05745         0.00000
 ------------------------------------------------------------------------------------
 ================================ END OF REPORT =====================================

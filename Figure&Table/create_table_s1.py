@@ -8,6 +8,10 @@ For each alternative dependent variable, runs Flood+Waste OLS model and extracts
 - Flood coefficient sign and significance
 - Adj. R²
 - Moran's I (OLS residuals)
+- Observations (N)
+
+Uses FB baseline–controlled sample by default: keeps only rows with
+3_fb_baseline_median >= 50 and not NaN (set FB_BASELINE_MIN = None to use all rows).
 
 Requirements:
   geopandas, pandas, numpy, statsmodels, libpysal, esda
@@ -55,6 +59,11 @@ ALTERNATIVE_DVARS = [
 
 MIN_OBS = 30
 N_PERM = 999
+
+# FB baseline filter: keep only rows with 3_fb_baseline_median >= this and not NaN (match model baseline-controlled runs)
+# Set to None to use all rows
+FB_BASELINE_MIN = 50
+BASELINE_COL = "3_fb_baseline_median"
 
 # -------------------- Helper functions --------------------
 def load_gpkg(path: Path, layer: str):
@@ -131,6 +140,17 @@ print(f"Loaded {len(gdf):,} rows")
 # Clean data
 numeric_cols = gdf.select_dtypes(include=[np.number]).columns.tolist()
 gdf = replace_nodata_with_nan(gdf, numeric_cols)
+
+# FB baseline filter: keep only rows with sufficient baseline (match baseline-controlled model runs)
+if FB_BASELINE_MIN is not None:
+    if BASELINE_COL not in gdf.columns:
+        raise ValueError(f"Column '{BASELINE_COL}' not found; cannot apply baseline filter.")
+    n_before = len(gdf)
+    gdf = gdf[gdf[BASELINE_COL].notna() & (gdf[BASELINE_COL] >= FB_BASELINE_MIN)].copy()
+    gdf = gdf.reset_index(drop=True)
+    n_after = len(gdf)
+    print(f"\nFB baseline filter: {BASELINE_COL} >= {FB_BASELINE_MIN} and not NaN.")
+    print(f"  Rows before: {n_before:,}  after: {n_after:,}  (removed {n_before - n_after:,})")
 
 # Check available columns
 print("\nChecking for alternative dependent variables...")
@@ -272,6 +292,7 @@ for dvar_name, display_name in available_dvars:
         moran_p = None
         moran_stars = ""
     
+    nobs = len(model_gdf)
     # Store results
     results.append({
         'Dependent variable': display_name,
@@ -279,13 +300,14 @@ for dvar_name, display_name in available_dvars:
         'Flood coef (OLS)': format_coef_sign_sig(flood_coef, flood_pval),
         'Adj. R²': f"{adj_r2:.4f}" if not pd.isna(adj_r2) else "",
         "Moran's I (OLS resid.)": f"{moran_i:.4f}{moran_stars}" if moran_i is not None else "",
+        'Observations': nobs,
         # Store raw values for sorting/filtering
         '_waste_coef': waste_coef,
         '_flood_coef': flood_coef,
         '_adj_r2': adj_r2,
         '_moran_i': moran_i,
         '_moran_p': moran_p,
-        '_nobs': len(model_gdf)
+        '_nobs': nobs
     })
 
 if not results:
@@ -299,13 +321,14 @@ print("="*80)
 # Create DataFrame
 table_s1 = pd.DataFrame(results)
 
-# Select and reorder columns for final table
+# Select and reorder columns for final table (include Observations)
 table_s1_final = table_s1[[
     'Dependent variable',
     'Waste coef (OLS)',
     'Flood coef (OLS)',
     'Adj. R²',
-    "Moran's I (OLS resid.)"
+    "Moran's I (OLS resid.)",
+    'Observations'
 ]].copy()
 
 # Sort by dependent variable name (or you could sort by adj R²)

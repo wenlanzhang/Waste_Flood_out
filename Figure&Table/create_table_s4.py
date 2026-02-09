@@ -14,6 +14,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 from pathlib import Path
+import re
 import pandas as pd
 
 # -------------------- USER PARAMETERS --------------------
@@ -95,6 +96,20 @@ def format_impact(value):
     except:
         return str(value)
 
+def parse_nobs_from_summary(summary_file):
+    """Parse number of observations from OLS summary text file."""
+    if not summary_file or not summary_file.exists():
+        return None
+    try:
+        with open(summary_file, 'r') as f:
+            content = f.read()
+            match = re.search(r'No\. Observations:\s+(\d+)', content)
+            if match:
+                return int(match.group(1))
+    except Exception:
+        pass
+    return None
+
 # -------------------- Load data --------------------
 print("="*80)
 print("Creating Table S4 and S41: Spatial lag model impacts")
@@ -115,6 +130,11 @@ if wasteflood_impacts_df is None:
         f"No Flood + Waste SLM impacts found. Looked for: {wasteflood_impacts_file.name} or slm_metrics.csv in {WASTEFLOOD_DIR}"
     )
 print(f"Found impacts: {len(wasteflood_impacts_df)} variables")
+
+# Observation count for Flood + Waste SLM (same N as OLS run)
+nobs_wasteflood = parse_nobs_from_summary(WASTEFLOOD_DIR / "ols_summary.txt")
+if nobs_wasteflood is not None:
+    print(f"Observations (Flood + Waste): {nobs_wasteflood}")
 
 # Load Flood + Waste + Population SLM impacts (prefer Facebook baseline; fall back to any or slm_metrics)
 print("\nLoading Flood + Waste + Population SLM impacts...")
@@ -141,6 +161,15 @@ if wastefloodpop_impacts_df is None:
         "(looked for slm_impacts_spreg_summary_*.csv or slm_metrics_*.csv)"
     )
 print(f"Found impacts: {len(wastefloodpop_impacts_df)} variables")
+
+# Observation count for Flood + Waste + Population SLM
+nobs_wastefloodpop = None
+for f in list(WASTEFLOODPOP_DIR.glob("ols_summary_*.txt")):
+    nobs_wastefloodpop = parse_nobs_from_summary(f)
+    if nobs_wastefloodpop is not None:
+        break
+if nobs_wastefloodpop is not None:
+    print(f"Observations (Flood + Waste + Population): {nobs_wastefloodpop}")
 
 # Verify required columns exist for both
 required_cols = ['variable', 'Direct', 'Indirect', 'Total']
@@ -205,6 +234,12 @@ print("Creating Table S41: Flood + Waste SLM impacts")
 print("="*80)
 
 table_s41 = prepare_impacts_table(wasteflood_impacts_df, "Flood + Waste", include_baseline=False)
+# Append Observations row
+if nobs_wasteflood is not None:
+    table_s41 = pd.concat([
+        table_s41,
+        pd.DataFrame([{'Variable': 'Observations', 'Direct': str(nobs_wasteflood), 'Indirect': '—', 'Total': '—'}])
+    ], ignore_index=True)
 
 # Save Table S41
 output_file_s41 = SUMMARY_OUT_DIR / "Table_S4_spatial_lag_impacts.csv"
@@ -220,8 +255,14 @@ print("Creating Table S5: Flood + Waste + Population SLM impacts")
 print("="*80)
 
 table_s5 = prepare_impacts_table(wastefloodpop_impacts_df, "Flood + Waste + Population", include_baseline=True)
+# Append Observations row
+if nobs_wastefloodpop is not None:
+    table_s5 = pd.concat([
+        table_s5,
+        pd.DataFrame([{'Variable': 'Observations', 'Direct': str(nobs_wastefloodpop), 'Indirect': '—', 'Total': '—'}])
+    ], ignore_index=True)
 
-# Save Table S5 (Flood + Waste + Population only; no F+P)
+# Save Table S5 (Flood + Waste + Population)
 output_file_s5 = SUMMARY_OUT_DIR / "Table_S5_spatial_lag_impacts.csv"
 table_s5.to_csv(output_file_s5, index=False)
 

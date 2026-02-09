@@ -12,6 +12,10 @@ Panel B: SLM residuals (Flood + Waste SLM)
 
 Caption message: "Spatial lag models substantially reduce residual clustering compared to OLS."
 
+FB baseline filter: set FB_BASELINE_MIN = 50 (default) to use model data from
+wasteflood_remove_low_baseline/model_data.gpkg if it exists; set to None to use
+default wasteflood/model_data.gpkg.
+
 Requirements:
   geopandas, matplotlib, seaborn, numpy, pandas, pathlib
 
@@ -57,6 +61,11 @@ OUTPUT_BASE = Path("/Users/wenlanzhang/PycharmProjects/Waste_Flood_out/Output")
 MODEL_DATA_PATH = OUTPUT_BASE / "wasteflood" / "model_data.gpkg"
 MODEL_DATA_LAYER = "model_data"
 
+# FB baseline filter: when set, use model data from baseline-controlled run if it exists
+# Set to None to use default wasteflood model_data; default 50 (use wasteflood_remove_low_baseline/model_data.gpkg)
+FB_BASELINE_MIN = 50
+BASELINE_CONTROLLED_PATH = OUTPUT_BASE / "wasteflood_remove_low_baseline" / "model_data.gpkg"
+
 FIGURE_DIR = Path("/Users/wenlanzhang/PycharmProjects/Waste_Flood_out/Figure/wasteflood")
 FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -85,6 +94,14 @@ def load_model_data(gpkg_path, layer_name):
     print(f"  Loaded {len(gdf):,} features")
     print(f"  CRS: {gdf.crs}")
     return gdf
+
+
+def get_model_data_path():
+    """When FB baseline filter is on, prefer baseline-controlled model data if it exists."""
+    if FB_BASELINE_MIN is not None and BASELINE_CONTROLLED_PATH.exists():
+        print(f"FB baseline filter (>= {FB_BASELINE_MIN}): using baseline-controlled model data")
+        return BASELINE_CONTROLLED_PATH
+    return MODEL_DATA_PATH
 
 def check_residual_columns(gdf):
     """Check for and identify residual columns."""
@@ -197,8 +214,9 @@ def main():
 
     print("Starting script execution...")
     try:
-        # Load model data
-        gdf = load_model_data(MODEL_DATA_PATH, MODEL_DATA_LAYER)
+        # Load model data (use baseline-controlled path when FB_BASELINE_MIN is set and that file exists)
+        model_path = get_model_data_path()
+        gdf = load_model_data(model_path, MODEL_DATA_LAYER)
 
         # Check for residual columns
         residual_cols = check_residual_columns(gdf)

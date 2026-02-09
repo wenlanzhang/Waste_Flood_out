@@ -1,0 +1,2 @@
+y,flood_var,flood_coefficient,flood_p_value,waste_var,waste_coefficient,waste_p_value,r2,adjr2,nobs,aic,bic,interaction_var,interaction_coefficient,interaction_p_value
+2_outflow_max,4_flood_p95,7.887327654075036,0.6655975233747706,4_waste_count,5.6113597049180415,5.021792281988196e-07,0.11753799368434925,0.10582389625538047,230,3527.7889413982607,3541.5412586339535,4_flood_p95_x_4_waste_count,-0.38866730522270587,0.5133428648817355

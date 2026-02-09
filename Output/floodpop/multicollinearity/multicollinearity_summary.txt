@@ -1,0 +1,16 @@
+Multicollinearity diagnostics (model step)
+Predictors: 4_flood_p95, 3_worldpop
+N (complete cases): 230
+
+VIF (Variance Inflation Factor):
+  VIF > 10: severe; VIF > 5: moderate (conservative).
+
+   variable      VIF  Tolerance
+4_flood_p95 1.005367   0.994662
+ 3_worldpop 1.005367   0.994662
+
+Condition number (scaled X): 1.08
+  > 30: ill-conditioning; > 100: severe.
+
+Interpretation:
+  No severe multicollinearity detected (all VIF <= 10, condition number acceptable).

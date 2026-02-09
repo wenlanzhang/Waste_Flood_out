@@ -1,15 +1,15 @@
 Multicollinearity diagnostics (model step)
 Predictors: 4_flood_p95, 4_waste_count
-N (complete cases): 250
+N (complete cases): 230
 
 VIF (Variance Inflation Factor):
   VIF > 10: severe; VIF > 5: moderate (conservative).
 
      variable      VIF  Tolerance
-  4_flood_p95 1.001982   0.998022
-4_waste_count 1.001982   0.998022
+  4_flood_p95 1.005094   0.994931
+4_waste_count 1.005094   0.994931
 
-Condition number (scaled X): 1.05
+Condition number (scaled X): 1.07
   > 30: ill-conditioning; > 100: severe.
 
 Interpretation:

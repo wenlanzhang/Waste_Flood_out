@@ -11,6 +11,9 @@ For each alternative waste measure, runs Flood + Waste OLS model and extracts:
 - Moran's I (OLS residuals, with p-value)
 - Sample size (N)
 
+Uses FB baseline–controlled sample by default: keeps only rows with
+3_fb_baseline_median >= 50 and not NaN (set FB_BASELINE_MIN = None to use all rows).
+
 This table is intended for Supplementary Results (npj Urban Sustainability).
 """
 
@@ -49,6 +52,11 @@ ALTERNATIVE_WASTE_VARS = [
 MIN_OBS = 30
 N_PERM = 999
 NODATA = -9999.0
+
+# FB baseline filter: keep only rows with 3_fb_baseline_median >= this and not NaN (match model baseline-controlled runs)
+# Set to None to use all rows
+FB_BASELINE_MIN = 50
+BASELINE_COL = "3_fb_baseline_median"
 
 # -------------------- Helper functions --------------------
 def load_gpkg(path: Path, layer: str):
@@ -98,6 +106,17 @@ print("=" * 80)
 
 gdf = load_gpkg(GPKG_PATH, LAYER_NAME)
 gdf = replace_nodata_with_nan(gdf)
+
+# FB baseline filter: keep only rows with sufficient baseline (match baseline-controlled model runs)
+if FB_BASELINE_MIN is not None:
+    if BASELINE_COL not in gdf.columns:
+        raise ValueError(f"Column '{BASELINE_COL}' not found; cannot apply baseline filter.")
+    n_before = len(gdf)
+    gdf = gdf[gdf[BASELINE_COL].notna() & (gdf[BASELINE_COL] >= FB_BASELINE_MIN)].copy()
+    gdf = gdf.reset_index(drop=True)
+    n_after = len(gdf)
+    print(f"\nFB baseline filter: {BASELINE_COL} >= {FB_BASELINE_MIN} and not NaN.")
+    print(f"  Rows before: {n_before:,}  after: {n_after:,}  (removed {n_before - n_after:,})")
 
 if DVAR not in gdf.columns or FLOOD_VAR not in gdf.columns:
     raise ValueError("Dependent or flood variable missing from dataset.")

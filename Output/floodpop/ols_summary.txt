@@ -1,28 +1,28 @@
                             OLS Regression Results                            
 ==============================================================================
-Dep. Variable:          2_outflow_max   R-squared:                       0.095
-Model:                            OLS   Adj. R-squared:                  0.087
-Method:                 Least Squares   F-statistic:                     8.498
-Date:                Fri, 30 Jan 2026   Prob (F-statistic):           0.000270
-Time:                        15:59:26   Log-Likelihood:                -1907.3
-No. Observations:                 250   AIC:                             3821.
-Df Residuals:                     247   BIC:                             3831.
+Dep. Variable:          2_outflow_max   R-squared:                       0.088
+Model:                            OLS   Adj. R-squared:                  0.080
+Method:                 Least Squares   F-statistic:                     7.740
+Date:                Fri, 30 Jan 2026   Prob (F-statistic):           0.000560
+Time:                        19:35:21   Log-Likelihood:                -1763.7
+No. Observations:                 230   AIC:                             3533.
+Df Residuals:                     227   BIC:                             3544.
 Df Model:                           2                                         
 Covariance Type:                  HC3                                         
 ===============================================================================
                   coef    std err          z      P>|z|      [0.025      0.975]
 -------------------------------------------------------------------------------
-const         123.7622     28.223      4.385      0.000      68.447     179.078
-4_flood_p95    -3.1378     14.212     -0.221      0.825     -30.994      24.718
-3_worldpop      0.0031      0.001      4.033      0.000       0.002       0.005
+const         132.3538     30.289      4.370      0.000      72.989     191.719
+4_flood_p95     2.1675     18.307      0.118      0.906     -33.714      38.049
+3_worldpop      0.0030      0.001      3.921      0.000       0.001       0.004
 ==============================================================================
-Omnibus:                      387.916   Durbin-Watson:                   1.464
-Prob(Omnibus):                  0.000   Jarque-Bera (JB):            65665.489
-Skew:                           7.633   Prob(JB):                         0.00
-Kurtosis:                      80.916   Cond. No.                     8.96e+04
+Omnibus:                      352.307   Durbin-Watson:                   1.457
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            51167.376
+Skew:                           7.328   Prob(JB):                         0.00
+Kurtosis:                      74.585   Cond. No.                     9.57e+04
 ==============================================================================
 
 Notes:
 [1] Standard Errors are heteroscedasticity robust (HC3)
-[2] The condition number is large, 8.96e+04. This might indicate that there are
+[2] The condition number is large, 9.57e+04. This might indicate that there are
 strong multicollinearity or other numerical problems.

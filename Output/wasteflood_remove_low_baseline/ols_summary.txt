@@ -1,0 +1,27 @@
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:          2_outflow_max   R-squared:                       0.118
+Model:                            OLS   Adj. R-squared:                  0.106
+Method:                 Least Squares   F-statistic:                     9.577
+Date:                Fri, 30 Jan 2026   Prob (F-statistic):           5.59e-06
+Time:                        17:08:02   Log-Likelihood:                -1759.9
+No. Observations:                 230   AIC:                             3528.
+Df Residuals:                     226   BIC:                             3542.
+Df Model:                           3                                         
+Covariance Type:                  HC3                                         
+===============================================================================================
+                                  coef    std err          z      P>|z|      [0.025      0.975]
+-----------------------------------------------------------------------------------------------
+const                         121.9076     28.406      4.292      0.000      66.233     177.582
+4_flood_p95                     7.8873     18.249      0.432      0.666     -27.881      43.655
+4_waste_count                   5.6114      1.117      5.025      0.000       3.423       7.800
+4_flood_p95_x_4_waste_count    -0.3887      0.595     -0.654      0.513      -1.554       0.777
+==============================================================================
+Omnibus:                      359.869   Durbin-Watson:                   1.287
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            56027.023
+Skew:                           7.608   Prob(JB):                         0.00
+Kurtosis:                      77.932   Cond. No.                         121.
+==============================================================================
+
+Notes:
+[1] Standard Errors are heteroscedasticity robust (HC3)

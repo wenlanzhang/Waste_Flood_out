@@ -1,8 +1,8 @@
 metric,value
-pseudo_r2,0.6180536644044838
-4_flood_p95_Direct,-0.7956
-4_flood_p95_Indirect,-5.1527
-4_flood_p95_Total,-5.9483
-4_waste_count_Direct,1.1933
-4_waste_count_Indirect,7.7287
-4_waste_count_Total,8.9221
+pseudo_r2,0.608857066933181
+4_flood_p95_Direct,-0.008
+4_flood_p95_Indirect,-0.0478
+4_flood_p95_Total,-0.0558
+4_waste_count_Direct,1.2359
+4_waste_count_Indirect,7.3721
+4_waste_count_Total,8.608

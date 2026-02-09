@@ -1,0 +1,4 @@
+variable,Direct,Indirect,Total
+4_flood_p95,1.3675,8.1488,9.5163
+4_waste_count,1.3245,7.8925,9.217
+4_flood_p95_x_4_waste_count,-0.0746,-0.4447,-0.5193

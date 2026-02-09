@@ -1,9 +1,9 @@
 Variable,Flood-only OLS,Flood + Waste OLS,Flood + Waste SLM
-Flood exposure (p95),3.37 (16.79),-4.11 (13.22),-0.80 (18.71)
-Waste accumulation,-,5.29*** (0.98),1.19 (0.60)
-Spatial lag (ρ),-,-,0.87 (0.03)
-Constant,196.59*** (32.47),121.16*** (27.87),7.38 (28.75)
-Observations,250,250,250
-Adj. R² / Pseudo R²,-0.0040,0.1166,0.6181
-Moran's I (residuals),0.5430**,0.4452**,0.0992**
-AIC,3843.00,3812.45,3654.15
+Flood exposure (p95),13.70 (20.98),0.72 (17.06),-0.01 (22.05)
+Waste accumulation,-,5.15*** (0.98),1.24 (0.63)
+Spatial lag (ρ),-,-,0.86 (0.04)
+Constant,204.78*** (34.03),129.18*** (29.85),7.29 (31.75)
+Observations,230,230,230
+Adj. R² / Pseudo R²,-0.0040,0.1091,0.6089
+Moran's I (residuals),0.5378**,0.4463**,0.1042**
+AIC,3552.00,3525.96,3383.73

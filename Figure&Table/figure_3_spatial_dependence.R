@@ -36,6 +36,11 @@ library(RColorBrewer)
 model_data_path <- "/Users/wenlanzhang/PycharmProjects/Waste_Flood_out/Output/wasteflood/model_data.gpkg"
 model_data_layer <- "model_data"
 
+# FB baseline filter: when set, use model data from baseline-controlled run if it exists
+# Set to NULL to use default wasteflood model_data; default 50 (use wasteflood_remove_low_baseline/model_data.gpkg)
+fb_baseline_min <- 50
+baseline_controlled_path <- "/Users/wenlanzhang/PycharmProjects/Waste_Flood_out/Output/wasteflood_remove_low_baseline/model_data.gpkg"
+
 output_dir <- "/Users/wenlanzhang/PycharmProjects/Waste_Flood_out/Figure/wasteflood"
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
@@ -57,23 +62,34 @@ residual_palette <- "RdYlBu"
 
 # -------------------- Helper functions --------------------
 
+get_model_data_path <- function() {
+  "When FB baseline filter is on, prefer baseline-controlled model data if it exists."
+  if (!is.null(fb_baseline_min) && file.exists(baseline_controlled_path)) {
+    cat("FB baseline filter (>= ", fb_baseline_min, "): using baseline-controlled model data\n", sep = "")
+    return(baseline_controlled_path)
+  }
+  return(model_data_path)
+}
+
 load_model_data <- function() {
   "Load the model data GeoPackage."
 
-  if (!file.exists(model_data_path)) {
-    stop("Model data GPKG not found: ", model_data_path)
+  path_to_use <- get_model_data_path()
+
+  if (!file.exists(path_to_use)) {
+    stop("Model data GPKG not found: ", path_to_use)
   }
 
-  cat("Loading model data from:", model_data_path, "\n")
+  cat("Loading model data from:", path_to_use, "\n")
 
   tryCatch({
-    gdf <- st_read(model_data_path, layer = model_data_layer, quiet = TRUE)
+    gdf <- st_read(path_to_use, layer = model_data_layer, quiet = TRUE)
     cat("  Loaded", nrow(gdf), "features from layer '", model_data_layer, "'\n")
     cat("  CRS:", st_crs(gdf)$input, "\n")
   }, error = function(e) {
     cat("  Failed to load layer '", model_data_layer, "': ", conditionMessage(e), "\n")
     cat("  Attempting to load without specifying layer...\n")
-    gdf <- st_read(model_data_path, quiet = TRUE)
+    gdf <- st_read(path_to_use, quiet = TRUE)
     cat("  Loaded", nrow(gdf), "features (no layer specified)\n")
   })
 

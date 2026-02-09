@@ -16,6 +16,7 @@ warnings.filterwarnings("ignore")
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import re
 
 # -------------------- USER PARAMETERS --------------------
 OUTPUT_BASE = Path("/Users/wenlanzhang/PycharmProjects/Waste_Flood_out/Output")
@@ -106,6 +107,20 @@ def format_moran_i_stars(moran_dict):
         return get_significance_stars(p_val)
     except:
         return "—"
+
+def parse_nobs_from_summary(summary_file):
+    """Parse number of observations from OLS summary text file."""
+    if not summary_file or not summary_file.exists():
+        return None
+    try:
+        with open(summary_file, 'r') as f:
+            content = f.read()
+            match = re.search(r'No\. Observations:\s+(\d+)', content)
+            if match:
+                return int(match.group(1))
+    except Exception:
+        pass
+    return None
 
 # -------------------- Load data --------------------
 print("="*80)
@@ -250,6 +265,27 @@ if FLOODPOP_DIR.exists() and (FLOODPOP_DIR / "slm_metrics.csv").exists():
     except Exception:
         pass
 
+# Load observation counts (N) for each model run
+nobs_wasteflood = parse_nobs_from_summary(WASTEFLOOD_DIR / "ols_summary.txt")
+nobs_floodpop = None
+if FLOODPOP_DIR.exists():
+    # Flood+Population may use ols_summary.txt or a named summary
+    for f in [FLOODPOP_DIR / "ols_summary.txt"] + list(FLOODPOP_DIR.glob("ols_summary_*.txt")):
+        nobs_floodpop = parse_nobs_from_summary(f)
+        if nobs_floodpop is not None:
+            break
+nobs_wastefloodpop = None
+for f in list(WASTEFLOODPOP_DIR.glob("ols_summary_*.txt")):
+    nobs_wastefloodpop = parse_nobs_from_summary(f)
+    if nobs_wastefloodpop is not None:
+        break
+if nobs_wasteflood is not None:
+    print(f"Observations (Flood + Waste): {nobs_wasteflood}")
+if nobs_floodpop is not None:
+    print(f"Observations (Flood + Population): {nobs_floodpop}")
+if nobs_wastefloodpop is not None:
+    print(f"Observations (Flood + Waste + Population): {nobs_wastefloodpop}")
+
 # -------------------- Extract coefficients --------------------
 def get_coef_from_df(df, var_name):
     """Extract coefficient and p-value for a variable."""
@@ -305,12 +341,14 @@ adj_r2_fp_slm = floodpop_slm_pseudo_r2 if floodpop_slm_pseudo_r2 is not None els
 # -------------------- Build table --------------------
 # Column headers are specification names only; OLS/SLM shown in a "Model" row.
 # Order: OLS columns first (Flood + Waste, Flood + Population, Flood + Waste + Population), then SLM in same order.
+# Observations: same N for OLS and SLM within each specification.
 table_data = {
     'Variable': [
         'Model',
         'Flood exposure',
         'Waste accumulation',
         'Baseline population',
+        'Observations',
         'Adj. R²',
         "Moran's I (resid.)"
     ],
@@ -319,6 +357,7 @@ table_data = {
         format_coef_significance(flood_fw_coef, flood_fw_p) if flood_fw_coef is not None else "—",
         format_coef_significance(waste_fw_coef, waste_fw_p) if waste_fw_coef is not None else "—",
         "—",
+        str(nobs_wasteflood) if nobs_wasteflood is not None else "—",
         f"{adj_r2_fw:.3f}" if adj_r2_fw is not None else "—",
         format_moran_i_stars(wasteflood_moran)
     ],
@@ -327,6 +366,7 @@ table_data = {
         format_coef_significance(flood_fp_ols_coef, flood_fp_ols_p) if flood_fp_ols_coef is not None else "—",
         "—",
         format_coef_significance(pop_fp_ols_coef, pop_fp_ols_p) if pop_fp_ols_coef is not None else "—",
+        str(nobs_floodpop) if nobs_floodpop is not None else "—",
         f"{adj_r2_fp_ols:.3f}" if adj_r2_fp_ols is not None else "—",
         format_moran_i_stars(floodpop_moran_ols) if floodpop_moran_ols else "—"
     ],
@@ -335,6 +375,7 @@ table_data = {
         format_coef_significance(flood_fwp_ols_coef, flood_fwp_ols_p) if flood_fwp_ols_coef is not None else "—",
         format_coef_significance(waste_fwp_ols_coef, waste_fwp_ols_p) if waste_fwp_ols_coef is not None else "—",
         format_coef_significance(pop_fwp_ols_coef, pop_fwp_ols_p) if pop_fwp_ols_coef is not None else "—",
+        str(nobs_wastefloodpop) if nobs_wastefloodpop is not None else "—",
         f"{adj_r2_fwp_ols:.3f}" if adj_r2_fwp_ols is not None else "—",
         format_moran_i_stars(wastefloodpop_moran_ols) if wastefloodpop_moran_ols else "—"
     ],
@@ -343,6 +384,7 @@ table_data = {
         format_coef_significance(flood_fw_slm_coef, flood_fw_slm_p) if flood_fw_slm_coef is not None else "—",
         format_coef_significance(waste_fw_slm_coef, waste_fw_slm_p) if waste_fw_slm_coef is not None else "—",
         "—",
+        str(nobs_wasteflood) if nobs_wasteflood is not None else "—",
         f"{adj_r2_fw_slm:.3f}" if adj_r2_fw_slm is not None else "—",
         format_moran_i_stars(wasteflood_moran_slm) if wasteflood_moran_slm else "—"
     ],
@@ -351,6 +393,7 @@ table_data = {
         format_coef_significance(flood_fp_slm_coef, flood_fp_slm_p) if flood_fp_slm_coef is not None else "—",
         "—",
         format_coef_significance(pop_fp_slm_coef, pop_fp_slm_p) if pop_fp_slm_coef is not None else "—",
+        str(nobs_floodpop) if nobs_floodpop is not None else "—",
         f"{adj_r2_fp_slm:.3f}" if adj_r2_fp_slm is not None else "—",
         format_moran_i_stars(floodpop_moran_slm) if floodpop_moran_slm else "—"
     ],
@@ -359,6 +402,7 @@ table_data = {
         format_coef_significance(flood_fwp_slm_coef, flood_fwp_slm_p) if flood_fwp_slm_coef is not None else "—",
         format_coef_significance(waste_fwp_slm_coef, waste_fwp_slm_p) if waste_fwp_slm_coef is not None else "—",
         format_coef_significance(pop_fwp_slm_coef, pop_fwp_slm_p) if pop_fwp_slm_coef is not None else "—",
+        str(nobs_wastefloodpop) if nobs_wastefloodpop is not None else "—",
         f"{adj_r2_fwp_slm:.3f}" if adj_r2_fwp_slm is not None else "—",
         format_moran_i_stars(wastefloodpop_moran_slm) if wastefloodpop_moran_slm else "—"
     ]

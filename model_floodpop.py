@@ -68,6 +68,11 @@ FB_BASELINE_SUBS = ['3_fb_baseline_median', '3_fb_baseline', 'fb_baseline', 'fac
 
 NODATA = -9999.0
 
+# Optional: Restrict to rows with sufficient Facebook baseline (for scaling reliability)
+# Set to None to use all rows; set to a number (e.g. 50) to keep only 3_fb_baseline_median >= that and not NaN
+FB_BASELINE_MIN = 50  # default: keep only cells with baseline >= 50; None = no filter
+BASELINE_COL = "3_fb_baseline_median"
+
 # # Optional: set to use specific variables; set to None to search
 # YCOL = None
 # FLOOD_VAR = None
@@ -188,6 +193,18 @@ print("STEP 2: Preparing cleaned modeling table...")
 print("="*80)
 numeric_cols = gdf.select_dtypes(include=[np.number]).columns.tolist()
 gdf = replace_nodata_with_nan(gdf, numeric_cols)
+
+# Optional filter: keep only rows with 3_fb_baseline_median >= FB_BASELINE_MIN and not NaN
+if FB_BASELINE_MIN is not None:
+    if BASELINE_COL not in gdf.columns:
+        raise ValueError(f"Column '{BASELINE_COL}' not found; cannot apply baseline filter.")
+    n_before = len(gdf)
+    gdf = gdf[gdf[BASELINE_COL].notna() & (gdf[BASELINE_COL] >= FB_BASELINE_MIN)].copy()
+    gdf = gdf.reset_index(drop=True)
+    n_after = len(gdf)
+    print(f"\nFilter applied: {BASELINE_COL} >= {FB_BASELINE_MIN} and not NaN.")
+    print(f"  Rows before filter: {n_before:,}")
+    print(f"  Rows after filter:  {n_after:,} (removed {n_before - n_after:,})")
 
 disp_candidates = find_candidates(DISP_SUBS, numeric_cols)
 flood_candidates = find_candidates(FLOOD_SUBS, numeric_cols)

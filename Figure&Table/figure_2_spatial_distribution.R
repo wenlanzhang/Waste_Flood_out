@@ -58,6 +58,11 @@ displacement_col <- "X3_estimated_outflow_pop_from_2_outflow_max"
 flood_col <- "X4_flood_p95"
 waste_col <- "X4_waste_count"
 
+# FB baseline filter: keep only rows with 3_fb_baseline_median >= this and not NA (match baseline-controlled runs)
+# Set to NULL to use all rows; default 50
+fb_baseline_min <- 50
+baseline_col <- "3_fb_baseline_median"   # R may read as "X3_fb_baseline_median"; resolved below
+
 # Panel labels
 panel_a_label <- "A. Flood-induced displacement intensity"
 panel_b_label <- "B. Flood exposure (95th percentile inundation depth)"
@@ -205,6 +210,18 @@ cat("===========================================================================
 tryCatch({
   # Load spatial data
   gdf <- load_spatial_data()
+
+  # FB baseline filter: keep only rows with sufficient baseline (match baseline-controlled runs)
+  if (!is.null(fb_baseline_min)) {
+    col_baseline <- if ("3_fb_baseline_median" %in% colnames(gdf)) "3_fb_baseline_median" else if ("X3_fb_baseline_median" %in% colnames(gdf)) "X3_fb_baseline_median" else NULL
+    if (!is.null(col_baseline)) {
+      n_before <- nrow(gdf)
+      gdf <- gdf[!is.na(gdf[[col_baseline]]) & gdf[[col_baseline]] >= fb_baseline_min, ]
+      n_after <- nrow(gdf)
+      cat("\nFB baseline filter:", col_baseline, ">=", fb_baseline_min, "and not NA\n")
+      cat("  Rows before:", n_before, " after:", n_after, " (removed", n_before - n_after, ")\n")
+    }
+  }
 
   # Check for required columns
   required_cols <- c(displacement_col, flood_col, waste_col)

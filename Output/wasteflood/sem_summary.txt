@@ -5,20 +5,20 @@ SUMMARY OF OUTPUT: ML SPATIAL ERROR (METHOD = full)
 ---------------------------------------------------
 Data set            :     unknown
 Weights matrix      :           w
-Dependent Variable  :2_outflow_max                Number of Observations:         250
-Mean dependent var  :    199.7875                Number of Variables   :           3
-S.D. dependent var  :    524.2562                Degrees of Freedom    :         247
-Pseudo R-squared    :      0.1164
-Log likelihood      :  -1824.9149
-Sigma-square ML     : 104635.9503                Akaike info criterion :    3655.830
-S.E of regression   :    323.4748                Schwarz criterion     :    3666.394
+Dependent Variable  :2_outflow_max                Number of Observations:         230
+Mean dependent var  :    217.1477                Number of Variables   :           3
+S.D. dependent var  :    543.1986                Degrees of Freedom    :         227
+Pseudo R-squared    :      0.1162
+Log likelihood      :  -1689.5969
+Sigma-square ML     : 115140.2552                Akaike info criterion :    3385.194
+S.E of regression   :    339.3232                Schwarz criterion     :    3395.508
 
 ------------------------------------------------------------------------------------
             Variable     Coefficient       Std.Error     z-Statistic     Probability
 ------------------------------------------------------------------------------------
-            CONSTANT       181.21170       179.32733         1.01051         0.31225
-         4_flood_p95         1.89312        22.62028         0.08369         0.93330
-       4_waste_count         0.26335         0.89879         0.29300         0.76952
-              lambda         0.88463         0.03060        28.91256         0.00000
+            CONSTANT       187.02882       179.57926         1.04148         0.29765
+         4_flood_p95         1.14183        25.53160         0.04472         0.96433
+       4_waste_count         0.39887         0.93506         0.42657         0.66969
+              lambda         0.87392         0.03302        26.46640         0.00000
 ------------------------------------------------------------------------------------
 ================================ END OF REPORT =====================================

@@ -11,6 +11,9 @@ Panel A: Displacement intensity (choropleth)
 Panel B: Flood exposure (p95 inundation)
 Panel C: Waste accumulation (raw count)
 
+FB baseline filter: set FB_BASELINE_MIN = 50 (default) to keep only cells with
+3_fb_baseline_median >= 50 and not NaN; set to None to use all rows.
+
 Requirements:
   geopandas, matplotlib, seaborn, numpy, pandas, pathlib
 
@@ -50,6 +53,11 @@ MODEL_DATA_LAYER = "model_data"
 FLOOD_WASTE_DATA_PATH = Path("/Users/wenlanzhang/PycharmProjects/Waste_Flood_out/Data/4/4_flood_waste_metrics_quadkey.gpkg")
 FLOOD_WASTE_LAYER = "4_flood_waste_metrics_quadkey"
 
+# FB baseline filter: keep only rows with 3_fb_baseline_median >= this and not NaN (match baseline-controlled runs)
+# Set to None to use all rows; default 50
+FB_BASELINE_MIN = 50
+BASELINE_COL = "3_fb_baseline_median"
+
 FIGURE_DIR = Path("/Users/wenlanzhang/PycharmProjects/Waste_Flood_out/Figure/wasteflood")
 FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -64,12 +72,13 @@ FLOOD_CMAP = 'Blues'          # Blues for flood depth
 WASTE_CMAP = 'YlOrBr'         # Yellow-Orange-Brown for waste accumulation
 
 # Panel labels (more analytical)
-PANEL_A_LABEL = 'A. Flood-induced displacement intensity'
+PANEL_A_LABEL = 'A. Flood-induced FB user displacement intensity'
 PANEL_B_LABEL = 'B. Flood exposure (95th percentile inundation depth)'
 PANEL_C_LABEL = 'C. Persistent waste accumulation'
 
 # Data columns
-DISPLACEMENT_COL = '3_estimated_outflow_pop_from_2_outflow_max'  # Should be in flood-waste data
+# DISPLACEMENT_COL = '3_estimated_outflow_pop_from_2_outflow_max'  # Should be in flood-waste data
+DISPLACEMENT_COL = '2_outflow_max'
 FLOOD_COL = '4_flood_p95'                                        # From flood-waste data
 WASTE_COL = '4_waste_count'                                      # From flood-waste data
 
@@ -122,13 +131,18 @@ def load_spatial_data(model_path, model_layer, flood_waste_path, flood_waste_lay
             else:
                 # Merge model data with flood-waste data
                 print("  Merging datasets on quadkey...")
-                merged_gdf = model_gdf.merge(flood_gdf[['quadkey', FLOOD_COL, WASTE_COL, DISPLACEMENT_COL]],
+                merge_cols = ['quadkey', FLOOD_COL, WASTE_COL, DISPLACEMENT_COL]
+                if BASELINE_COL in flood_gdf.columns:
+                    merge_cols.append(BASELINE_COL)
+                merged_gdf = model_gdf.merge(flood_gdf[merge_cols],
                                             on='quadkey', how='left')
                 print(f"  Merged dataset has {len(merged_gdf):,} features")
         else:
             # Merge model data with flood-waste data
-            print("  Merging datasets on quadkey...")
-            merged_gdf = model_gdf.merge(flood_gdf[['quadkey', FLOOD_COL, WASTE_COL]],
+            merge_cols = ['quadkey', FLOOD_COL, WASTE_COL]
+            if BASELINE_COL in flood_gdf.columns:
+                merge_cols.append(BASELINE_COL)
+            merged_gdf = model_gdf.merge(flood_gdf[merge_cols],
                                         on='quadkey', how='left')
             print(f"  Merged dataset has {len(merged_gdf):,} features")
 
@@ -266,6 +280,15 @@ def main():
         # Load and merge spatial data
         gdf = load_spatial_data(MODEL_DATA_PATH, MODEL_DATA_LAYER,
                                FLOOD_WASTE_DATA_PATH, FLOOD_WASTE_LAYER)
+
+        # FB baseline filter: keep only rows with sufficient baseline (match baseline-controlled runs)
+        if FB_BASELINE_MIN is not None and BASELINE_COL in gdf.columns:
+            n_before = len(gdf)
+            gdf = gdf[gdf[BASELINE_COL].notna() & (gdf[BASELINE_COL] >= FB_BASELINE_MIN)].copy()
+            gdf = gdf.reset_index(drop=True)
+            n_after = len(gdf)
+            print(f"\nFB baseline filter: {BASELINE_COL} >= {FB_BASELINE_MIN} and not NaN.")
+            print(f"  Rows before: {n_before:,}  after: {n_after:,}  (removed {n_before - n_after:,})")
 
         # Check for required columns
         required_cols = [DISPLACEMENT_COL, FLOOD_COL, WASTE_COL]

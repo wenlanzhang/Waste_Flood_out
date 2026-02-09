@@ -1,25 +1,25 @@
                             OLS Regression Results                            
 ==============================================================================
-Dep. Variable:          2_outflow_max   R-squared:                       0.124
-Model:                            OLS   Adj. R-squared:                  0.117
-Method:                 Least Squares   F-statistic:                     15.05
-Date:                Fri, 30 Jan 2026   Prob (F-statistic):           6.79e-07
-Time:                        16:15:13   Log-Likelihood:                -1903.2
-No. Observations:                 250   AIC:                             3812.
-Df Residuals:                     247   BIC:                             3823.
+Dep. Variable:          2_outflow_max   R-squared:                       0.117
+Model:                            OLS   Adj. R-squared:                  0.109
+Method:                 Least Squares   F-statistic:                     13.85
+Date:                Fri, 30 Jan 2026   Prob (F-statistic):           2.12e-06
+Time:                        19:35:26   Log-Likelihood:                -1760.0
+No. Observations:                 230   AIC:                             3526.
+Df Residuals:                     227   BIC:                             3536.
 Df Model:                           2                                         
 Covariance Type:                  HC3                                         
 =================================================================================
                     coef    std err          z      P>|z|      [0.025      0.975]
 ---------------------------------------------------------------------------------
-const           121.1622     27.867      4.348      0.000      66.545     175.780
-4_flood_p95      -4.1121     13.217     -0.311      0.756     -30.016      21.792
-4_waste_count     5.2939      0.985      5.376      0.000       3.364       7.224
+const           129.1835     29.851      4.328      0.000      70.677     187.690
+4_flood_p95       0.7240     17.062      0.042      0.966     -32.716      34.164
+4_waste_count     5.1531      0.985      5.233      0.000       3.223       7.083
 ==============================================================================
-Omnibus:                      396.029   Durbin-Watson:                   1.273
-Prob(Omnibus):                  0.000   Jarque-Bera (JB):            71717.886
-Skew:                           7.922   Prob(JB):                         0.00
-Kurtosis:                      84.449   Cond. No.                         58.1
+Omnibus:                      359.749   Durbin-Watson:                   1.273
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            55916.532
+Skew:                           7.603   Prob(JB):                         0.00
+Kurtosis:                      77.857   Cond. No.                         62.1
 ==============================================================================
 
 Notes:

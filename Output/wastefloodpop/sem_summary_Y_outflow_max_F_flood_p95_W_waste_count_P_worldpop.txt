@@ -13,21 +13,21 @@ SUMMARY OF OUTPUT: ML SPATIAL ERROR (METHOD = full)
 ---------------------------------------------------
 Data set            :     unknown
 Weights matrix      :           w
-Dependent Variable  :2_outflow_max                Number of Observations:         250
-Mean dependent var  :    199.7875                Number of Variables   :           4
-S.D. dependent var  :    524.2562                Degrees of Freedom    :         246
-Pseudo R-squared    :      0.0209
-Log likelihood      :  -1821.3574
-Sigma-square ML     : 100545.4406                Akaike info criterion :    3650.715
-S.E of regression   :    317.0890                Schwarz criterion     :    3664.801
+Dependent Variable  :2_outflow_max                Number of Observations:         230
+Mean dependent var  :    217.1477                Number of Variables   :           4
+S.D. dependent var  :    543.1986                Degrees of Freedom    :         226
+Pseudo R-squared    :      0.0112
+Log likelihood      :  -1686.5481
+Sigma-square ML     : 110924.7114                Akaike info criterion :    3381.096
+S.E of regression   :    333.0536                Schwarz criterion     :    3394.849
 
 ------------------------------------------------------------------------------------
             Variable     Coefficient       Std.Error     z-Statistic     Probability
 ------------------------------------------------------------------------------------
-            CONSTANT       198.07432       199.21169         0.99429         0.32008
-         4_flood_p95         2.89733        22.18763         0.13058         0.89611
-       4_waste_count         1.91069         1.08698         1.75780         0.07878
-          3_worldpop        -0.00202         0.00074        -2.71396         0.00665
-              lambda         0.89838         0.02804        32.04415         0.00000
+            CONSTANT       203.33699       196.75927         1.03343         0.30140
+         4_flood_p95         2.09764        25.05233         0.08373         0.93327
+       4_waste_count         2.01550         1.13832         1.77060         0.07663
+          3_worldpop        -0.00196         0.00078        -2.50980         0.01208
+              lambda         0.88724         0.03055        29.04294         0.00000
 ------------------------------------------------------------------------------------
 ================================ END OF REPORT =====================================

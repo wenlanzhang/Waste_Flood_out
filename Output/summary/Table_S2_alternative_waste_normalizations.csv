@@ -1,4 +1,4 @@
 Waste measure,Waste coef (OLS),Flood coef (OLS),Adj. R²,Moran's I (OLS resid.),N
-Raw count,+***,0,0.117,0.445 (p=0.001),250
-Per population,0,0,-0.006,0.535 (p=0.001),224
-Per SVI coverage,+***,0,0.053,0.472 (p=0.001),224
+Raw count,+***,0,0.109,0.446 (p=0.001),230
+Per population,0,0,-0.007,0.533 (p=0.001),213
+Per SVI coverage,+***,0,0.048,0.474 (p=0.001),213
